@@ -6,7 +6,13 @@ import {
   type FormEvent,
 } from "react";
 
-import { supabase } from "@/lib/supabase";
+import {
+  createPortal,
+} from "react-dom";
+
+import {
+  supabase,
+} from "@/lib/supabase";
 
 import styles from "./auth-modal.module.css";
 
@@ -16,7 +22,10 @@ type AuthMode =
 
 type AuthModalProps = {
   open: boolean;
-  initialMode?: AuthMode;
+
+  initialMode?:
+    AuthMode;
+
   onClose: () => void;
 };
 
@@ -25,6 +34,12 @@ export function AuthModal({
   initialMode = "login",
   onClose,
 }: AuthModalProps) {
+  const [
+    mounted,
+    setMounted,
+  ] =
+    useState(false);
+
   const [
     mode,
     setMode,
@@ -36,32 +51,38 @@ export function AuthModal({
   const [
     fullName,
     setFullName,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     email,
     setEmail,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     password,
     setPassword,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     confirmPassword,
     setConfirmPassword,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     loading,
     setLoading,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const [
     message,
     setMessage,
-  ] = useState("");
+  ] =
+    useState("");
 
   const [
     messageType,
@@ -71,6 +92,23 @@ export function AuthModal({
       "success" | "error"
     >("error");
 
+  /*
+   * Necesario para usar
+   * document.body sin problemas
+   * con Next.js / SSR.
+   */
+  useEffect(() => {
+    setMounted(true);
+
+    return () => {
+      setMounted(false);
+    };
+  }, []);
+
+  /*
+   * Configuración cuando
+   * se abre el modal.
+   */
   useEffect(() => {
     if (!open) {
       return;
@@ -81,6 +119,10 @@ export function AuthModal({
     );
 
     setMessage("");
+
+    const previousOverflow =
+      document.body.style
+        .overflow;
 
     document.body.style.overflow =
       "hidden";
@@ -104,7 +146,7 @@ export function AuthModal({
 
     return () => {
       document.body.style.overflow =
-        "";
+        previousOverflow;
 
       window.removeEventListener(
         "keydown",
@@ -129,11 +171,12 @@ export function AuthModal({
 
     setPassword("");
 
-    setConfirmPassword(
-      ""
-    );
+    setConfirmPassword("");
   };
 
+  /*
+   * INICIAR SESIÓN
+   */
   const signIn =
     async (
       event:
@@ -154,6 +197,7 @@ export function AuthModal({
       }
 
       setLoading(true);
+
       setMessage("");
 
       try {
@@ -161,14 +205,12 @@ export function AuthModal({
           error,
         } =
           await supabase.auth
-            .signInWithPassword(
-              {
-                email:
-                  email.trim(),
+            .signInWithPassword({
+              email:
+                email.trim(),
 
-                password,
-              }
-            );
+              password,
+            });
 
         if (error) {
           setMessageType(
@@ -197,12 +239,13 @@ export function AuthModal({
           450
         );
       } finally {
-        setLoading(
-          false
-        );
+        setLoading(false);
       }
     };
 
+  /*
+   * CREAR CUENTA
+   */
   const signUp =
     async (
       event:
@@ -268,6 +311,7 @@ export function AuthModal({
       }
 
       setLoading(true);
+
       setMessage("");
 
       try {
@@ -329,12 +373,13 @@ export function AuthModal({
           );
         }
       } finally {
-        setLoading(
-          false
-        );
+        setLoading(false);
       }
     };
 
+  /*
+   * GOOGLE
+   */
   const signInGoogle =
     async () => {
       if (!supabase) {
@@ -350,6 +395,7 @@ export function AuthModal({
       }
 
       setLoading(true);
+
       setMessage("");
 
       const {
@@ -368,9 +414,7 @@ export function AuthModal({
           });
 
       if (error) {
-        setLoading(
-          false
-        );
+        setLoading(false);
 
         setMessageType(
           "error"
@@ -382,11 +426,28 @@ export function AuthModal({
       }
     };
 
-  if (!open) {
+  /*
+   * No renderizamos hasta
+   * estar del lado del cliente.
+   */
+  if (
+    !mounted ||
+    !open
+  ) {
     return null;
   }
 
-  return (
+  /*
+   * IMPORTANTE:
+   *
+   * createPortal manda todo
+   * el modal directamente al
+   * document.body.
+   *
+   * Así deja de depender del
+   * transform del header.
+   */
+  return createPortal(
     <div
       className={
         styles.layer
@@ -407,7 +468,19 @@ export function AuthModal({
         className={
           styles.modal
         }
+        role="dialog"
+        aria-modal="true"
+        aria-label={
+          mode ===
+          "login"
+            ? "Iniciar sesión"
+            : "Crear cuenta"
+        }
       >
+        {/* =========================
+            PARTE IZQUIERDA
+        ========================== */}
+
         <aside
           className={
             styles.visual
@@ -440,6 +513,7 @@ export function AuthModal({
               Todo tu
               universo
               <br />
+
               en un solo
               lugar.
             </h2>
@@ -491,6 +565,10 @@ export function AuthModal({
           </div>
         </aside>
 
+        {/* =========================
+            PARTE DERECHA
+        ========================== */}
+
         <div
           className={
             styles.formSide
@@ -522,6 +600,10 @@ export function AuthModal({
               POKEAMIGOS
             </b>
           </div>
+
+          {/* =====================
+              PESTAÑAS
+          ====================== */}
 
           <div
             className={
@@ -589,6 +671,10 @@ export function AuthModal({
                 : "Regístrate con correo o utiliza Google. Todas las cuentas comienzan como clientes."}
             </p>
           </header>
+
+          {/* =====================
+              LOGIN
+          ====================== */}
 
           {mode ===
           "login" ? (
@@ -665,6 +751,10 @@ export function AuthModal({
               </button>
             </form>
           ) : (
+            /* =====================
+               REGISTRO
+            ====================== */
+
             <form
               className={
                 styles.form
@@ -801,6 +891,10 @@ export function AuthModal({
             </form>
           )}
 
+          {/* =====================
+              GOOGLE
+          ====================== */}
+
           <div
             className={
               styles.divider
@@ -831,6 +925,10 @@ export function AuthModal({
             Continuar con Google
           </button>
 
+          {/* =====================
+              MENSAJES
+          ====================== */}
+
           {message && (
             <div
               className={`${styles.feedback} ${
@@ -857,6 +955,7 @@ export function AuthModal({
           </p>
         </div>
       </section>
-    </div>
+    </div>,
+    document.body
   );
 }
