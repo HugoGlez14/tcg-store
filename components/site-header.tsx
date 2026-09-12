@@ -67,6 +67,32 @@ const money =
     }
   );
 
+function preloadImage(
+  src: string
+) {
+  return new Promise<void>(
+    (resolve) => {
+      const image =
+        new Image();
+
+      image.onload =
+        () => resolve();
+
+      image.onerror =
+        () => resolve();
+
+      image.src =
+        src;
+
+      if (
+        image.complete
+      ) {
+        resolve();
+      }
+    }
+  );
+}
+
 export function SiteHeader({
   variant = "light",
 }: {
@@ -81,6 +107,12 @@ export function SiteHeader({
     useState<LogoMap>(
       {}
     );
+
+  const [
+    logosLoading,
+    setLogosLoading,
+  ] =
+    useState(true);
 
   const [
     cartOpen,
@@ -100,6 +132,10 @@ export function SiteHeader({
 
   useEffect(() => {
     if (!supabase) {
+      setLogosLoading(
+        false
+      );
+
       return;
     }
 
@@ -126,11 +162,18 @@ export function SiteHeader({
             error
           );
 
+          setLogosLoading(
+            false
+          );
+
           return;
         }
 
         const next:
           LogoMap = {};
+
+        const urls:
+          string[] = [];
 
         for (
           const row of
@@ -160,13 +203,32 @@ export function SiteHeader({
                 row.storage_path
               );
 
+          const url =
+            publicData.publicUrl;
+
           next[
             row.tcg as TcgSlug
-          ] =
-            publicData.publicUrl;
+          ] = url;
+
+          urls.push(url);
         }
 
+        /*
+         * Esperamos a que las
+         * imágenes estén realmente
+         * cargadas antes de mostrarlas.
+         */
+        await Promise.allSettled(
+          urls.map(
+            preloadImage
+          )
+        );
+
         setLogos(next);
+
+        setLogosLoading(
+          false
+        );
       };
 
     loadLogos();
@@ -260,9 +322,28 @@ export function SiteHeader({
                   game.slug
                 }
               >
-                {logos[
-                  game.slug
-                ] ? (
+                {logosLoading ? (
+                  <span
+                    style={{
+                      width:
+                        78,
+                      height:
+                        24,
+                      borderRadius:
+                        6,
+                      background:
+                        variant ===
+                        "dark"
+                          ? "rgba(255,255,255,.09)"
+                          : "rgba(11,16,32,.08)",
+                      animation:
+                        "pokeHeaderPulse 1.2s ease-in-out infinite",
+                    }}
+                    aria-hidden="true"
+                  />
+                ) : logos[
+                    game.slug
+                  ] ? (
                   <img
                     className={
                       styles.navLogo
@@ -328,6 +409,21 @@ export function SiteHeader({
           </button>
         </div>
       </header>
+
+      <style>
+        {`
+          @keyframes pokeHeaderPulse {
+            0%,
+            100% {
+              opacity: .42;
+            }
+
+            50% {
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
 
       {cartOpen && (
         <div

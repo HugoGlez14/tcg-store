@@ -1,0 +1,221 @@
+.loader {
+  display: grid;
+  place-items: center;
+
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(99, 89, 229, 0.2),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 85% 80%,
+      rgba(70, 225, 208, 0.12),
+      transparent 30%
+    ),
+    #090e1b;
+
+  color: #fff;
+}
+
+.fullscreen {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 9999;
+
+  width: 100%;
+  height: 100dvh;
+}
+
+.content {
+  width:
+    min(
+      330px,
+      calc(100% - 44px)
+    );
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  text-align: center;
+}
+
+.cards {
+  position: relative;
+
+  width: 105px;
+  height: 92px;
+
+  margin-bottom: 25px;
+}
+
+.cards span {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  width: 57px;
+  height: 79px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.1
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.02
+      )
+    );
+
+  transform-origin:
+    center;
+
+  animation:
+    cardFloat
+    1.4s
+    ease-in-out
+    infinite;
+}
+
+.cards span:nth-child(1) {
+  transform:
+    translate(-82%, -50%)
+    rotate(-18deg);
+
+  animation-delay:
+    -0.22s;
+}
+
+.cards span:nth-child(2) {
+  z-index: 2;
+
+  transform:
+    translate(-50%, -57%)
+    rotate(0deg);
+}
+
+.cards span:nth-child(3) {
+  transform:
+    translate(-18%, -50%)
+    rotate(18deg);
+
+  animation-delay:
+    -0.42s;
+}
+
+.brand {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-bottom: 13px;
+
+  letter-spacing:
+    0.15em;
+}
+
+.brand span {
+  font-weight: 900;
+}
+
+.brand strong {
+  font-size: 12px;
+}
+
+.content p {
+  margin:
+    0 0 22px;
+
+  color: #aab3c8;
+
+  font-size: 12px;
+}
+
+.progress {
+  width: 180px;
+  height: 3px;
+
+  overflow: hidden;
+
+  border-radius: 100px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+}
+
+.progress i {
+  display: block;
+
+  width: 48%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #735ee8,
+      #69d8ff,
+      #6ee6d8
+    );
+
+  animation:
+    progressMove
+    1.15s
+    ease-in-out
+    infinite;
+}
+
+@keyframes progressMove {
+  0% {
+    transform:
+      translateX(-110%);
+  }
+
+  100% {
+    transform:
+      translateX(320%);
+  }
+}
+
+@keyframes cardFloat {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+
+  50% {
+    margin-top: -7px;
+  }
+}

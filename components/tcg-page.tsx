@@ -15,6 +15,10 @@ import {
 } from "@/components/site-footer";
 
 import {
+  PageLoader,
+} from "@/components/page-loader";
+
+import {
   useCart,
 } from "@/components/cart-provider";
 
@@ -120,6 +124,40 @@ function slugify(
       /(^-|-$)/g,
       ""
     );
+}
+
+function preloadImage(
+  src: string
+) {
+  return new Promise<void>(
+    (resolve) => {
+      if (!src) {
+        resolve();
+        return;
+      }
+
+      const image =
+        new Image();
+
+      const finish =
+        () => resolve();
+
+      image.onload =
+        finish;
+
+      image.onerror =
+        finish;
+
+      image.src =
+        src;
+
+      if (
+        image.complete
+      ) {
+        resolve();
+      }
+    }
+  );
 }
 
 const styles = `
@@ -513,11 +551,6 @@ const styles = `
     .15em;
 }
 
-
-/* ========================
-   CATÁLOGO
-======================== */
-
 .store-page
 .catalog-wrap {
   padding:
@@ -885,8 +918,7 @@ a {
 }
 
 .store-page
-.product-meta
-> p {
+.product-meta > p {
   margin:
     0 0 7px;
 
@@ -941,8 +973,7 @@ a {
 > div:last-child {
   display: flex;
 
-  align-items:
-    center;
+  align-items: center;
 
   justify-content:
     space-between;
@@ -1153,6 +1184,15 @@ export function TcgPage({
     setLogo,
   ] = useState("");
 
+  /*
+   * Éste es el loader
+   * principal de la página.
+   */
+  const [
+    pageLoading,
+    setPageLoading,
+  ] = useState(true);
+
   const [
     dbProducts,
     setDbProducts,
@@ -1161,19 +1201,26 @@ export function TcgPage({
       DbProduct[]
     >([]);
 
-  const [
-    loadingProducts,
-    setLoadingProducts,
-  ] =
-    useState(true);
-
   const {
     addItem,
   } = useCart();
 
   useEffect(() => {
+    /*
+     * Cada vez que navegamos
+     * de un TCG a otro volvemos
+     * a activar el loader.
+     */
+    setPageLoading(true);
+
+    setCover("");
+
+    setLogo("");
+
+    setDbProducts([]);
+
     if (!supabase) {
-      setLoadingProducts(
+      setPageLoading(
         false
       );
 
@@ -1183,141 +1230,209 @@ export function TcgPage({
     const client =
       supabase;
 
+    let active =
+      true;
+
     const load =
       async () => {
-        const [
-          coverResult,
-          logoResult,
-          productResult,
-        ] =
-          await Promise.all([
-            client
-              .from(
-                "catalog_covers"
-              )
-              .select(
-                "storage_path"
-              )
-              .eq(
-                "tcg",
-                config.slug
-              )
-              .maybeSingle(),
+        try {
+          const [
+            coverResult,
+            logoResult,
+            productResult,
+          ] =
+            await Promise.all([
+              client
+                .from(
+                  "catalog_covers"
+                )
+                .select(
+                  "storage_path"
+                )
+                .eq(
+                  "tcg",
+                  config.slug
+                )
+                .maybeSingle(),
 
-            client
-              .from(
-                "tcg_logos"
-              )
-              .select(
-                "storage_path"
-              )
-              .eq(
-                "tcg",
-                config.slug
-              )
-              .maybeSingle(),
+              client
+                .from(
+                  "tcg_logos"
+                )
+                .select(
+                  "storage_path"
+                )
+                .eq(
+                  "tcg",
+                  config.slug
+                )
+                .maybeSingle(),
 
-            client
-              .from(
-                "products"
-              )
-              .select(
-                "id,tcg,name,category,description,price_mxn,stock"
-              )
-              .eq(
-                "tcg",
-                config.slug
-              )
-              .eq(
-                "status",
-                "published"
-              )
-              .order(
-                "created_at",
-                {
-                  ascending:
-                    false,
-                }
-              ),
-          ]);
+              client
+                .from(
+                  "products"
+                )
+                .select(
+                  "id,tcg,name,category,description,price_mxn,stock"
+                )
+                .eq(
+                  "tcg",
+                  config.slug
+                )
+                .eq(
+                  "status",
+                  "published"
+                )
+                .order(
+                  "created_at",
+                  {
+                    ascending:
+                      false,
+                  }
+                ),
+            ]);
 
-        if (
-          coverResult
-            .data
-            ?.storage_path
-        ) {
-          const {
-            data,
-          } =
-            client.storage
-              .from(
-                "catalog-images"
+          let coverUrl =
+            "";
+
+          let logoUrl =
+            "";
+
+          if (
+            coverResult
+              .data
+              ?.storage_path
+          ) {
+            const {
+              data,
+            } =
+              client.storage
+                .from(
+                  "catalog-images"
+                )
+                .getPublicUrl(
+                  coverResult
+                    .data
+                    .storage_path
+                );
+
+            coverUrl =
+              data.publicUrl;
+          }
+
+          if (
+            logoResult
+              .data
+              ?.storage_path
+          ) {
+            const {
+              data,
+            } =
+              client.storage
+                .from(
+                  "catalog-images"
+                )
+                .getPublicUrl(
+                  logoResult
+                    .data
+                    .storage_path
+                );
+
+            logoUrl =
+              data.publicUrl;
+          }
+
+          /*
+           * IMPORTANTE:
+           *
+           * Aunque ya tengamos la URL,
+           * todavía esperamos a que el
+           * navegador cargue físicamente
+           * logo y portada.
+           *
+           * Así evitamos el parpadeo.
+           */
+          await Promise.allSettled(
+            [
+              logoUrl,
+              coverUrl,
+            ]
+              .filter(
+                Boolean
               )
-              .getPublicUrl(
-                coverResult
-                  .data
-                  .storage_path
-              );
+              .map(
+                preloadImage
+              )
+          );
+
+          if (!active) {
+            return;
+          }
 
           setCover(
-            data.publicUrl
+            coverUrl
           );
-        } else {
-          setCover("");
-        }
-
-        if (
-          logoResult
-            .data
-            ?.storage_path
-        ) {
-          const {
-            data,
-          } =
-            client.storage
-              .from(
-                "catalog-images"
-              )
-              .getPublicUrl(
-                logoResult
-                  .data
-                  .storage_path
-              );
 
           setLogo(
-            data.publicUrl
+            logoUrl
           );
-        } else {
-          setLogo("");
-        }
 
-        if (
-          productResult.error
-        ) {
-          console.error(
-            "No se pudieron cargar los productos:",
+          if (
             productResult.error
-          );
+          ) {
+            console.error(
+              "No se pudieron cargar los productos:",
+              productResult.error
+            );
 
-          setDbProducts(
-            []
-          );
-        } else {
-          setDbProducts(
-            (
-              productResult.data ??
+            setDbProducts(
               []
-            ) as DbProduct[]
+            );
+          } else {
+            setDbProducts(
+              (
+                productResult.data ??
+                []
+              ) as DbProduct[]
+            );
+          }
+        } catch (error) {
+          console.error(
+            `Error cargando ${config.name}:`,
+            error
           );
+        } finally {
+          if (active) {
+            /*
+             * Pequeñísimo retraso visual
+             * para evitar flashes cuando
+             * la consulta responde demasiado
+             * rápido.
+             */
+            window.setTimeout(
+              () => {
+                if (active) {
+                  setPageLoading(
+                    false
+                  );
+                }
+              },
+              120
+            );
+          }
         }
-
-        setLoadingProducts(
-          false
-        );
       };
 
     load();
-  }, [config.slug]);
+
+    return () => {
+      active =
+        false;
+    };
+  }, [
+    config.slug,
+    config.name,
+  ]);
 
   const sections =
     useMemo<
@@ -1455,7 +1570,8 @@ export function TcgPage({
       DisplayProduct
   ) => {
     if (
-      product.stock === 0
+      product.stock ===
+      0
     ) {
       return;
     }
@@ -1487,6 +1603,19 @@ export function TcgPage({
       2200
     );
   };
+
+  /*
+   * Mientras no estén listos
+   * logo + portada + productos,
+   * no renderizamos la página.
+   */
+  if (pageLoading) {
+    return (
+      <PageLoader
+        label={`Cargando ${config.name}…`}
+      />
+    );
+  }
 
   return (
     <>
@@ -1604,165 +1733,157 @@ export function TcgPage({
             </nav>
           )}
 
-          {loadingProducts && (
-            <p className="catalog-message">
-              Cargando
-              catálogo…
-            </p>
-          )}
+          {sections.map(
+            (
+              section,
+              sectionIndex
+            ) => (
+              <section
+                key={
+                  section.title
+                }
+                id={slugify(
+                  section.title
+                )}
+                className="product-section"
+              >
+                <div className="product-section-title">
+                  <span>
+                    {String(
+                      sectionIndex +
+                        1
+                    ).padStart(
+                      2,
+                      "0"
+                    )}
+                  </span>
 
-          {!loadingProducts &&
-            sections.map(
-              (
-                section,
-                sectionIndex
-              ) => (
-                <section
-                  key={
-                    section.title
-                  }
-                  id={slugify(
-                    section.title
-                  )}
-                  className="product-section"
-                >
-                  <div className="product-section-title">
-                    <span>
-                      {String(
-                        sectionIndex +
-                          1
-                      ).padStart(
-                        2,
-                        "0"
-                      )}
-                    </span>
+                  <h3>
+                    {
+                      section.title
+                    }
+                  </h3>
 
-                    <h3>
-                      {
-                        section.title
-                      }
-                    </h3>
+                  <a href="#catalogo">
+                    Volver arriba
+                    ↗
+                  </a>
+                </div>
 
-                    <a href="#catalogo">
-                      Volver arriba
-                      ↗
-                    </a>
-                  </div>
-
-                  <div className="product-grid">
-                    {section.products.map(
-                      (
-                        product,
-                        index
-                      ) => (
-                        <article
-                          className="product-card"
-                          key={
-                            product.id
-                          }
-                        >
-                          <div className="product-image">
-                            <div
-                              className={`image-loader loader-${config.slug}`}
-                              aria-hidden="true"
-                            >
-                              <i />
-                              <i />
-                              <i />
-                            </div>
-
-                            <span>
-                              Imagen de
-                              producto
-                            </span>
-
-                            <small>
-                              Galería
-                              disponible
-                              próximamente
-                            </small>
-
-                            <b>
-                              {String(
-                                index +
-                                  1
-                              ).padStart(
-                                2,
-                                "0"
-                              )}
-                            </b>
+                <div className="product-grid">
+                  {section.products.map(
+                    (
+                      product,
+                      index
+                    ) => (
+                      <article
+                        className="product-card"
+                        key={
+                          product.id
+                        }
+                      >
+                        <div className="product-image">
+                          <div
+                            className={`image-loader loader-${config.slug}`}
+                            aria-hidden="true"
+                          >
+                            <i />
+                            <i />
+                            <i />
                           </div>
 
-                          <div className="product-meta">
-                            <p>
+                          <span>
+                            Imagen de
+                            producto
+                          </span>
+
+                          <small>
+                            Galería
+                            disponible
+                            próximamente
+                          </small>
+
+                          <b>
+                            {String(
+                              index +
+                                1
+                            ).padStart(
+                              2,
+                              "0"
+                            )}
+                          </b>
+                        </div>
+
+                        <div className="product-meta">
+                          <p>
+                            {
+                              section.title
+                            }
+                          </p>
+
+                          <h4>
+                            {
+                              product.name
+                            }
+                          </h4>
+
+                          {product.description && (
+                            <p className="product-description">
                               {
-                                section.title
+                                product.description
                               }
                             </p>
+                          )}
 
-                            <h4>
-                              {
-                                product.name
-                              }
-                            </h4>
+                          {product.stock !==
+                            null && (
+                            <small className="product-stock">
+                              {product.stock >
+                              0
+                                ? `${product.stock} disponible${
+                                    product.stock ===
+                                    1
+                                      ? ""
+                                      : "s"
+                                  }`
+                                : "Agotado"}
+                            </small>
+                          )}
 
-                            {product.description && (
-                              <p className="product-description">
-                                {
-                                  product.description
-                                }
-                              </p>
-                            )}
+                          <div>
+                            <strong>
+                              {product.price ===
+                              null
+                                ? "Consultar precio"
+                                : money.format(
+                                    product.price
+                                  )}
+                            </strong>
 
-                            {product.stock !==
-                              null && (
-                              <small className="product-stock">
-                                {product.stock >
+                            <button
+                              type="button"
+                              disabled={
+                                product.stock ===
                                 0
-                                  ? `${product.stock} disponible${
-                                      product.stock ===
-                                      1
-                                        ? ""
-                                        : "s"
-                                    }`
-                                  : "Agotado"}
-                              </small>
-                            )}
-
-                            <div>
-                              <strong>
-                                {product.price ===
-                                null
-                                  ? "Consultar precio"
-                                  : money.format(
-                                      product.price
-                                    )}
-                              </strong>
-
-                              <button
-                                type="button"
-                                disabled={
-                                  product.stock ===
-                                  0
-                                }
-                                onClick={() =>
-                                  addToCart(
-                                    product
-                                  )
-                                }
-                                aria-label={`Añadir ${product.name} al carrito`}
-                              >
-                                +
-                              </button>
-                            </div>
+                              }
+                              onClick={() =>
+                                addToCart(
+                                  product
+                                )
+                              }
+                              aria-label={`Añadir ${product.name} al carrito`}
+                            >
+                              +
+                            </button>
                           </div>
-                        </article>
-                      )
-                    )}
-                  </div>
-                </section>
-              )
-            )}
+                        </div>
+                      </article>
+                    )
+                  )}
+                </div>
+              </section>
+            )
+          )}
         </section>
 
         <SiteFooter />
