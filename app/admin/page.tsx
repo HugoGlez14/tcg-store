@@ -4,9 +4,19 @@ import "./admin.css";
 import "./admin-enhancements.css";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { ProductManager } from "@/components/admin-product-manager";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  supabase,
+} from "@/lib/supabase";
+
+import {
+  ProductManager,
+} from "@/components/admin-product-manager";
 
 const tabs = [
   "Resumen",
@@ -23,70 +33,161 @@ type UserProfile = {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  role: "admin" | "customer";
+
+  role:
+    | "admin"
+    | "customer";
+
   created_at: string;
 };
 
-export default function AdminPage() {
-  const [tab, setTab] = useState("Resumen");
-  const [saved, setSaved] = useState("");
+type CoverInfo = {
+  path: string;
+  url: string;
+};
 
-  const [accessState, setAccessState] = useState<
-    "loading" | "setup" | "login" | "denied" | "allowed"
+type CoverMap =
+  Record<string, CoverInfo>;
+
+type CoverTarget =
+  | "home"
+  | "catalog";
+
+const coverOptions = [
+  {
+    slug: "pokemon",
+    name: "Pokémon",
+  },
+  {
+    slug: "riftbound",
+    name: "Riftbound",
+  },
+  {
+    slug: "yugioh",
+    name: "Yu-Gi-Oh!",
+  },
+];
+
+export default function AdminPage() {
+  const [
+    tab,
+    setTab,
+  ] = useState("Resumen");
+
+  const [
+    saved,
+    setSaved,
+  ] = useState("");
+
+  const [
+    accessState,
+    setAccessState,
+  ] = useState<
+    | "loading"
+    | "setup"
+    | "login"
+    | "denied"
+    | "allowed"
   >("loading");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [accessMessage, setAccessMessage] = useState("");
+  const [
+    email,
+    setEmail,
+  ] = useState("");
+
+  const [
+    password,
+    setPassword,
+  ] = useState("");
+
+  const [
+    accessMessage,
+    setAccessMessage,
+  ] = useState("");
 
   useEffect(() => {
     if (!supabase) {
-      setAccessState("setup");
+      setAccessState(
+        "setup"
+      );
+
       return;
     }
 
     const client = supabase;
 
-    const checkAccess = async () => {
-      const { data, error } = await client.auth.getUser();
+    const checkAccess =
+      async () => {
+        const {
+          data,
+          error,
+        } =
+          await client.auth.getUser();
 
-      if (error || !data.user) {
-        setAccessState("login");
-        return;
-      }
+        if (
+          error ||
+          !data.user
+        ) {
+          setAccessState(
+            "login"
+          );
 
-      const { data: profile, error: profileError } = await client
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .maybeSingle();
+          return;
+        }
 
-      if (profileError) {
-        console.error("Error consultando perfil:", profileError);
-        setAccessState("denied");
-        return;
-      }
+        const {
+          data: profile,
+          error:
+            profileError,
+        } = await client
+          .from("profiles")
+          .select("role")
+          .eq(
+            "id",
+            data.user.id
+          )
+          .maybeSingle();
 
-      setAccessState(
-        profile?.role === "admin"
-          ? "allowed"
-          : "denied"
-      );
-    };
+        if (profileError) {
+          console.error(
+            "Error consultando perfil:",
+            profileError
+          );
+
+          setAccessState(
+            "denied"
+          );
+
+          return;
+        }
+
+        setAccessState(
+          profile?.role ===
+            "admin"
+            ? "allowed"
+            : "denied"
+        );
+      };
 
     checkAccess();
 
-    const { data: listener } =
-      client.auth.onAuthStateChange(() => {
-        checkAccess();
-      });
+    const {
+      data: listener,
+    } =
+      client.auth.onAuthStateChange(
+        () => {
+          checkAccess();
+        }
+      );
 
     return () => {
       listener.subscription.unsubscribe();
     };
   }, []);
 
-  const save = (message: string) => {
+  const save = (
+    message: string
+  ) => {
     setSaved(message);
 
     setTimeout(() => {
@@ -101,11 +202,15 @@ export default function AdminPage() {
 
     if (!supabase) return;
 
-    const { error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const {
+      error,
+    } =
+      await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        }
+      );
 
     setAccessMessage(
       error
@@ -114,61 +219,93 @@ export default function AdminPage() {
     );
   };
 
-  const google = async () => {
-    if (!supabase) return;
+  const google =
+    async () => {
+      if (!supabase) return;
 
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/admin`,
-      },
-    });
-  };
+      await supabase.auth.signInWithOAuth(
+        {
+          provider: "google",
 
-  if (accessState !== "allowed") {
+          options: {
+            redirectTo:
+              `${window.location.origin}/admin`,
+          },
+        }
+      );
+    };
+
+  if (
+    accessState !==
+    "allowed"
+  ) {
     return (
       <main className="admin-page">
         <section className="admin-main">
           <div className="admin-card">
-            <p>Acceso privado</p>
+            <p>
+              Acceso privado
+            </p>
 
-            {accessState === "loading" && (
-              <h1>Verificando acceso…</h1>
+            {accessState ===
+              "loading" && (
+              <h1>
+                Verificando
+                acceso…
+              </h1>
             )}
 
-            {accessState === "setup" && (
+            {accessState ===
+              "setup" && (
               <>
-                <h1>Administrador protegido</h1>
+                <h1>
+                  Administrador
+                  protegido
+                </h1>
 
                 <span>
-                  La conexión de datos aún no está
-                  configurada. El panel permanece oculto
-                  para visitantes.
+                  La conexión de
+                  datos aún no está
+                  configurada.
                 </span>
               </>
             )}
 
-            {accessState === "login" && (
+            {accessState ===
+              "login" && (
               <>
-                <h1>Inicia sesión</h1>
+                <h1>
+                  Inicia sesión
+                </h1>
 
                 <span>
-                  Solo cuentas autorizadas pueden editar
-                  productos e imágenes.
+                  Solo cuentas
+                  autorizadas pueden
+                  editar la tienda.
                 </span>
 
                 <form
                   className="form-panel"
-                  onSubmit={signIn}
+                  onSubmit={
+                    signIn
+                  }
                 >
                   <label>
                     Correo
 
                     <input
                       type="email"
-                      value={email}
-                      onChange={(event) =>
-                        setEmail(event.target.value)
+                      value={
+                        email
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setEmail(
+                          event
+                            .target
+                            .value
+                        )
                       }
                       required
                     />
@@ -180,9 +317,17 @@ export default function AdminPage() {
                     <input
                       type="password"
                       minLength={6}
-                      value={password}
-                      onChange={(event) =>
-                        setPassword(event.target.value)
+                      value={
+                        password
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setPassword(
+                          event
+                            .target
+                            .value
+                        )
                       }
                       required
                     />
@@ -198,25 +343,36 @@ export default function AdminPage() {
 
                 <button
                   className="secondary"
-                  onClick={google}
+                  onClick={
+                    google
+                  }
                 >
-                  Continuar con Google
+                  Continuar con
+                  Google
                 </button>
 
                 {accessMessage && (
-                  <p>{accessMessage}</p>
+                  <p>
+                    {
+                      accessMessage
+                    }
+                  </p>
                 )}
               </>
             )}
 
-            {accessState === "denied" && (
+            {accessState ===
+              "denied" && (
               <>
-                <h1>Cuenta sin permiso</h1>
+                <h1>
+                  Cuenta sin
+                  permiso
+                </h1>
 
                 <span>
-                  El propietario debe asignar a esta
-                  cuenta el rol de administrador antes de
-                  abrir el panel.
+                  Esta cuenta no
+                  tiene rol de
+                  administrador.
                 </span>
               </>
             )}
@@ -240,7 +396,10 @@ export default function AdminPage() {
           className="wordmark"
           href="/"
         >
-          [ ] <span>TCG STORE</span>
+          [ ]{" "}
+          <span>
+            TCG STORE
+          </span>
         </Link>
 
         <div className="admin-caption">
@@ -248,25 +407,36 @@ export default function AdminPage() {
         </div>
 
         <nav>
-          {tabs.map((item) => (
-            <button
-              className={
-                tab === item
-                  ? "selected"
-                  : ""
-              }
-              key={item}
-              onClick={() => setTab(item)}
-            >
-              {item}
-            </button>
-          ))}
+          {tabs.map(
+            (item) => (
+              <button
+                type="button"
+                className={
+                  tab === item
+                    ? "selected"
+                    : ""
+                }
+                key={item}
+                onClick={() =>
+                  setTab(
+                    item
+                  )
+                }
+              >
+                {item}
+              </button>
+            )
+          )}
         </nav>
 
         <div className="admin-user">
-          <b>Administrador</b>
+          <b>
+            Administrador
+          </b>
 
-          <span>Acceso principal</span>
+          <span>
+            Acceso principal
+          </span>
 
           <Link href="/">
             ← Ver tienda
@@ -277,15 +447,19 @@ export default function AdminPage() {
       <section className="admin-main">
         <header className="admin-top">
           <div>
-            <p>Panel de control</p>
+            <p>
+              Panel de control
+            </p>
+
             <h1>{tab}</h1>
           </div>
 
           <button
             className="publish"
+            type="button"
             onClick={() =>
               save(
-                "Cambios guardados como borrador"
+                "Cambios guardados"
               )
             }
           >
@@ -293,32 +467,49 @@ export default function AdminPage() {
           </button>
         </header>
 
-        {tab === "Resumen" && (
-          <Overview setTab={setTab} />
+        {tab ===
+          "Resumen" && (
+          <Overview
+            setTab={
+              setTab
+            }
+          />
         )}
 
-        {tab === "Productos" && (
+        {tab ===
+          "Productos" && (
           <ProductManager />
         )}
 
-        {tab === "Usuarios" && (
+        {tab ===
+          "Usuarios" && (
           <Users />
         )}
 
-        {tab === "Imágenes" && (
-          <ImageManager save={save} />
+        {tab ===
+          "Imágenes" && (
+          <ImageManager
+            save={save}
+          />
         )}
 
-        {tab === "Pagos" && (
-          <Payments save={save} />
+        {tab ===
+          "Pagos" && (
+          <Payments
+            save={save}
+          />
         )}
 
-        {tab === "Pedidos" && (
+        {tab ===
+          "Pedidos" && (
           <Orders />
         )}
 
-        {tab === "Ajustes" && (
-          <Settings save={save} />
+        {tab ===
+          "Ajustes" && (
+          <Settings
+            save={save}
+          />
         )}
       </section>
 
@@ -331,34 +522,62 @@ export default function AdminPage() {
   );
 }
 
+
+/* =========================================
+   RESUMEN
+========================================= */
+
 function Overview({
   setTab,
 }: {
-  setTab: (tab: string) => void;
+  setTab: (
+    tab: string
+  ) => void;
 }) {
   return (
     <>
       <section className="metrics">
         <article>
-          <small>Ventas del mes</small>
-          <strong>$0.00</strong>
+          <small>
+            Ventas del mes
+          </small>
+
+          <strong>
+            $0.00
+          </strong>
+
           <span>
-            Se activa al conectar pagos
+            Se activa al
+            conectar pagos
           </span>
         </article>
 
         <article>
-          <small>Pedidos pendientes</small>
-          <strong>03</strong>
-          <span>Requieren revisión</span>
+          <small>
+            Pedidos pendientes
+          </small>
+
+          <strong>
+            03
+          </strong>
+
+          <span>
+            Requieren revisión
+          </span>
         </article>
 
         <article>
           <small>
             Productos publicados
           </small>
-          <strong>12</strong>
-          <span>3 catálogos activos</span>
+
+          <strong>
+            12
+          </strong>
+
+          <span>
+            3 catálogos activos
+          </span>
         </article>
       </section>
 
@@ -366,43 +585,60 @@ function Overview({
         <article className="admin-card wide">
           <div className="card-heading">
             <div>
-              <p>Acceso rápido</p>
+              <p>
+                Acceso rápido
+              </p>
 
               <h2>
-                Prepara tu tienda para vender.
+                Prepara tu tienda
+                para vender.
               </h2>
             </div>
           </div>
 
           <div className="quick-actions">
             <button
+              type="button"
               onClick={() =>
-                setTab("Productos")
+                setTab(
+                  "Productos"
+                )
               }
             >
               ＋ Añadir producto
             </button>
 
             <button
+              type="button"
               onClick={() =>
-                setTab("Pagos")
+                setTab(
+                  "Imágenes"
+                )
               }
             >
-              ◉ Configurar pagos
+              ▣ Cambiar
+              portadas
             </button>
 
             <button
+              type="button"
               onClick={() =>
-                setTab("Ajustes")
+                setTab(
+                  "Ajustes"
+                )
               }
             >
-              ⚙ Ajustes de tienda
+              ⚙ Ajustes de
+              tienda
             </button>
           </div>
         </article>
 
         <article className="admin-card">
-          <p>Estado de lanzamiento</p>
+          <p>
+            Estado de
+            lanzamiento
+          </p>
 
           <div className="launch-progress">
             <i />
@@ -417,12 +653,17 @@ function Overview({
             </li>
 
             <li className="done">
-              Estructura de productos
+              Estructura de
+              productos
             </li>
 
-            <li>Conectar pagos</li>
+            <li>
+              Conectar pagos
+            </li>
 
-            <li>Publicar inventario</li>
+            <li>
+              Publicar inventario
+            </li>
           </ol>
         </article>
       </section>
@@ -430,14 +671,30 @@ function Overview({
   );
 }
 
-function Users() {
-  const [users, setUsers] =
-    useState<UserProfile[]>([]);
 
-  const [loading, setLoading] =
+/* =========================================
+   USUARIOS
+========================================= */
+
+function Users() {
+  const [
+    users,
+    setUsers,
+  ] =
+    useState<
+      UserProfile[]
+    >([]);
+
+  const [
+    loading,
+    setLoading,
+  ] =
     useState(true);
 
-  const [error, setError] =
+  const [
+    error,
+    setError,
+  ] =
     useState("");
 
   useEffect(() => {
@@ -447,48 +704,60 @@ function Users() {
       );
 
       setLoading(false);
+
       return;
     }
 
-    /*
-     * IMPORTANTE:
-     * Guardamos supabase en una constante local.
-     * Así TypeScript sabe que client no puede ser null
-     * dentro de loadUsers().
-     */
     const client = supabase;
 
-    const loadUsers = async () => {
-      const {
-        data,
-        error: queryError,
-      } = await client
-        .from("profiles")
-        .select(
-          "id,email,full_name,avatar_url,role,created_at"
-        )
-        .order("created_at", {
-          ascending: false,
-        });
+    const loadUsers =
+      async () => {
+        const {
+          data,
+          error:
+            queryError,
+        } =
+          await client
+            .from(
+              "profiles"
+            )
+            .select(
+              "id,email,full_name,avatar_url,role,created_at"
+            )
+            .order(
+              "created_at",
+              {
+                ascending:
+                  false,
+              }
+            );
 
-      if (queryError) {
-        console.error(
-          "Error cargando usuarios:",
+        if (
           queryError
+        ) {
+          console.error(
+            "Error cargando usuarios:",
+            queryError
+          );
+
+          setError(
+            queryError.message
+          );
+
+          setUsers([]);
+        } else {
+          setUsers(
+            (data ??
+              []) as UserProfile[]
+          );
+
+          setError("");
+        }
+
+        setLoading(
+          false
         );
-
-        setError(queryError.message);
-        setUsers([]);
-      } else {
-        setUsers(
-          (data ?? []) as UserProfile[]
-        );
-
-        setError("");
-      }
-
-      setLoading(false);
-    };
+      };
 
     loadUsers();
   }, []);
@@ -497,8 +766,14 @@ function Users() {
     <section className="admin-card users-panel">
       <div className="card-heading">
         <div>
-          <p>Clientes registrados</p>
-          <h2>Usuarios</h2>
+          <p>
+            Clientes
+            registrados
+          </p>
+
+          <h2>
+            Usuarios
+          </h2>
         </div>
 
         <b className="users-count">
@@ -512,321 +787,880 @@ function Users() {
         </p>
       )}
 
-      {!loading && error && (
-        <p className="users-error">
-          No se pudieron cargar los usuarios:{" "}
-          {error}
-        </p>
-      )}
+      {!loading &&
+        error && (
+          <p className="users-error">
+            No se pudieron
+            cargar los
+            usuarios:{" "}
+            {error}
+          </p>
+        )}
 
       {!loading &&
         !error &&
-        users.length === 0 && (
+        users.length ===
+          0 && (
           <p className="users-message">
-            Todavía no hay usuarios
+            Todavía no hay
+            usuarios
             registrados.
           </p>
         )}
 
       {!loading &&
         !error &&
-        users.length > 0 && (
+        users.length >
+          0 && (
           <div className="users-list">
             <div className="user-row user-row-head">
-              <span>Usuario</span>
-              <span>Correo</span>
-              <span>Rol</span>
-              <span>Registro</span>
+              <span>
+                Usuario
+              </span>
+
+              <span>
+                Correo
+              </span>
+
+              <span>
+                Rol
+              </span>
+
+              <span>
+                Registro
+              </span>
             </div>
 
-            {users.map((user) => {
-              const displayName =
-                user.full_name ||
-                user.email?.split("@")[0] ||
-                "Sin nombre";
+            {users.map(
+              (user) => {
+                const
+                  displayName =
+                    user.full_name ||
+                    user.email?.split(
+                      "@"
+                    )[0] ||
+                    "Sin nombre";
 
-              const initial =
-                displayName
-                  .slice(0, 1)
-                  .toUpperCase();
+                const
+                  initial =
+                    displayName
+                      .slice(
+                        0,
+                        1
+                      )
+                      .toUpperCase();
 
-              return (
-                <div
-                  className="user-row"
-                  key={user.id}
-                >
-                  <div className="user-identity">
-                    {user.avatar_url ? (
-                      <span
-                        className="user-avatar"
-                        style={{
-                          backgroundImage:
-                            `url(${user.avatar_url})`,
-                        }}
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span
-                        className="user-avatar user-avatar-fallback"
-                        aria-hidden="true"
-                      >
-                        {initial}
-                      </span>
-                    )}
-
-                    <b>{displayName}</b>
-                  </div>
-
-                  <span>
-                    {user.email ||
-                      "Sin correo"}
-                  </span>
-
-                  <em
-                    className={
-                      user.role === "admin"
-                        ? "role-admin"
-                        : "role-customer"
+                return (
+                  <div
+                    className="user-row"
+                    key={
+                      user.id
                     }
                   >
-                    {user.role === "admin"
-                      ? "Admin"
-                      : "Cliente"}
-                  </em>
+                    <div className="user-identity">
+                      {user.avatar_url ? (
+                        <span
+                          className="user-avatar"
+                          style={{
+                            backgroundImage:
+                              `url(${user.avatar_url})`,
+                          }}
+                        />
+                      ) : (
+                        <span className="user-avatar user-avatar-fallback">
+                          {
+                            initial
+                          }
+                        </span>
+                      )}
 
-                  <span>
-                    {new Date(
-                      user.created_at
-                    ).toLocaleDateString(
-                      "es-MX"
-                    )}
-                  </span>
-                </div>
-              );
-            })}
+                      <b>
+                        {
+                          displayName
+                        }
+                      </b>
+                    </div>
+
+                    <span>
+                      {user.email ||
+                        "Sin correo"}
+                    </span>
+
+                    <em
+                      className={
+                        user.role ===
+                        "admin"
+                          ? "role-admin"
+                          : "role-customer"
+                      }
+                    >
+                      {user.role ===
+                      "admin"
+                        ? "Admin"
+                        : "Cliente"}
+                    </em>
+
+                    <span>
+                      {new Date(
+                        user.created_at
+                      ).toLocaleDateString(
+                        "es-MX"
+                      )}
+                    </span>
+                  </div>
+                );
+              }
+            )}
           </div>
         )}
     </section>
   );
 }
 
-const coverOptions = [
-  {
-    slug: "pokemon",
-    name: "Pokémon",
-    hint: "Banner para el catálogo de Pokémon",
-  },
-  {
-    slug: "riftbound",
-    name: "Riftbound",
-    hint: "Banner para el catálogo de Riftbound",
-  },
-  {
-    slug: "yugioh",
-    name: "Yu-Gi-Oh!",
-    hint: "Banner para el catálogo de Yu-Gi-Oh!",
-  },
-];
+
+/* =========================================
+   IMÁGENES
+========================================= */
 
 function ImageManager({
   save,
 }: {
-  save: (message: string) => void;
+  save: (
+    message: string
+  ) => void;
 }) {
-  const [covers, setCovers] =
-    useState<Record<string, string>>({});
+  const [
+    homeCovers,
+    setHomeCovers,
+  ] =
+    useState<CoverMap>({});
 
+  const [
+    catalogCovers,
+    setCatalogCovers,
+  ] =
+    useState<CoverMap>({});
+
+  const [
+    loading,
+    setLoading,
+  ] =
+    useState(true);
+
+  const [
+    uploading,
+    setUploading,
+  ] =
+    useState("");
+
+  /*
+   * Cargar todas las
+   * portadas desde Supabase.
+   */
   useEffect(() => {
-    setCovers(
-      Object.fromEntries(
-        coverOptions.map(({ slug }) => [
-          slug,
-          localStorage.getItem(
-            `tcg-cover-${slug}`
-          ) || "",
-        ])
-      )
-    );
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    const client = supabase;
+
+    const buildMap = (
+      rows:
+        | {
+            tcg: string;
+            storage_path:
+              string;
+          }[]
+        | null
+    ) => {
+      const map:
+        CoverMap = {};
+
+      for (
+        const row of
+        rows ?? []
+      ) {
+        const {
+          data,
+        } =
+          client.storage
+            .from(
+              "catalog-images"
+            )
+            .getPublicUrl(
+              row.storage_path
+            );
+
+        map[row.tcg] = {
+          path:
+            row.storage_path,
+
+          url:
+            data.publicUrl,
+        };
+      }
+
+      return map;
+    };
+
+    const loadCovers =
+      async () => {
+        const [
+          homeResult,
+          catalogResult,
+        ] =
+          await Promise.all([
+            client
+              .from(
+                "home_covers"
+              )
+              .select(
+                "tcg,storage_path"
+              ),
+
+            client
+              .from(
+                "catalog_covers"
+              )
+              .select(
+                "tcg,storage_path"
+              ),
+          ]);
+
+        if (
+          homeResult.error
+        ) {
+          console.error(
+            "Error cargando portadas de inicio:",
+            homeResult.error
+          );
+        }
+
+        if (
+          catalogResult.error
+        ) {
+          console.error(
+            "Error cargando portadas internas:",
+            catalogResult.error
+          );
+        }
+
+        setHomeCovers(
+          buildMap(
+            homeResult.data
+          )
+        );
+
+        setCatalogCovers(
+          buildMap(
+            catalogResult.data
+          )
+        );
+
+        setLoading(false);
+      };
+
+    loadCovers();
   }, []);
 
-  const upload = (
-    slug: string,
-    file?: File
-  ) => {
-    if (!file) return;
+  /*
+   * Subir o reemplazar
+   * una portada.
+   */
+  const uploadCover =
+    async (
+      target:
+        CoverTarget,
+      slug: string,
+      name: string,
+      file?: File
+    ) => {
+      if (
+        !file ||
+        !supabase
+      ) {
+        return;
+      }
 
-    if (!file.type.startsWith("image/")) {
+      if (
+        ![
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+        ].includes(
+          file.type
+        )
+      ) {
+        save(
+          "Solo se permiten JPG, PNG o WebP"
+        );
+
+        return;
+      }
+
+      if (
+        file.size >
+        5 *
+          1024 *
+          1024
+      ) {
+        save(
+          "La imagen debe pesar menos de 5 MB"
+        );
+
+        return;
+      }
+
+      const client =
+        supabase;
+
+      const
+        uploadingId =
+          `${target}-${slug}`;
+
+      setUploading(
+        uploadingId
+      );
+
+      const extension =
+        file.name
+          .split(".")
+          .pop()
+          ?.toLowerCase()
+          .replace(
+            /[^a-z0-9]/g,
+            ""
+          ) ||
+        "jpg";
+
+      const folder =
+        target ===
+        "home"
+          ? "home"
+          : "catalog";
+
+      const storagePath =
+        `${folder}/${slug}-${Date.now()}.${extension}`;
+
+      const current =
+        target ===
+        "home"
+          ? homeCovers[
+              slug
+            ]
+          : catalogCovers[
+              slug
+            ];
+
+      try {
+        const {
+          error:
+            uploadError,
+        } =
+          await client.storage
+            .from(
+              "catalog-images"
+            )
+            .upload(
+              storagePath,
+              file,
+              {
+                cacheControl:
+                  "3600",
+
+                upsert:
+                  false,
+
+                contentType:
+                  file.type,
+              }
+            );
+
+        if (
+          uploadError
+        ) {
+          throw uploadError;
+        }
+
+        const table =
+          target ===
+          "home"
+            ? "home_covers"
+            : "catalog_covers";
+
+        const {
+          error: dbError,
+        } =
+          await client
+            .from(table)
+            .upsert(
+              {
+                tcg: slug,
+
+                storage_path:
+                  storagePath,
+
+                alt_text:
+                  `Portada ${name}`,
+
+                updated_at:
+                  new Date()
+                    .toISOString(),
+              },
+              {
+                onConflict:
+                  "tcg",
+              }
+            );
+
+        if (dbError) {
+          await client.storage
+            .from(
+              "catalog-images"
+            )
+            .remove([
+              storagePath,
+            ]);
+
+          throw dbError;
+        }
+
+        /*
+         * Ya que la nueva
+         * quedó guardada,
+         * eliminamos la
+         * anterior.
+         */
+        if (
+          current?.path &&
+          current.path !==
+            storagePath
+        ) {
+          await client.storage
+            .from(
+              "catalog-images"
+            )
+            .remove([
+              current.path,
+            ]);
+        }
+
+        const {
+          data:
+            publicData,
+        } =
+          client.storage
+            .from(
+              "catalog-images"
+            )
+            .getPublicUrl(
+              storagePath
+            );
+
+        const newCover = {
+          path:
+            storagePath,
+
+          url:
+            publicData.publicUrl,
+        };
+
+        if (
+          target ===
+          "home"
+        ) {
+          setHomeCovers(
+            (
+              previous
+            ) => ({
+              ...previous,
+
+              [slug]:
+                newCover,
+            })
+          );
+        } else {
+          setCatalogCovers(
+            (
+              previous
+            ) => ({
+              ...previous,
+
+              [slug]:
+                newCover,
+            })
+          );
+        }
+
+        save(
+          target ===
+            "home"
+            ? `Portada de ${name} en inicio actualizada`
+            : `Portada interna de ${name} actualizada`
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          "Error subiendo portada:",
+          error
+        );
+
+        save(
+          "No se pudo guardar la portada"
+        );
+      } finally {
+        setUploading("");
+      }
+    };
+
+  /*
+   * Eliminar portada.
+   */
+  const removeCover =
+    async (
+      target:
+        CoverTarget,
+      slug: string
+    ) => {
+      if (!supabase) {
+        return;
+      }
+
+      const client =
+        supabase;
+
+      const covers =
+        target ===
+        "home"
+          ? homeCovers
+          : catalogCovers;
+
+      const current =
+        covers[slug];
+
+      const table =
+        target ===
+        "home"
+          ? "home_covers"
+          : "catalog_covers";
+
+      const {
+        error,
+      } = await client
+        .from(table)
+        .delete()
+        .eq(
+          "tcg",
+          slug
+        );
+
+      if (error) {
+        console.error(
+          error
+        );
+
+        save(
+          "No se pudo eliminar la portada"
+        );
+
+        return;
+      }
+
+      if (
+        current?.path
+      ) {
+        await client.storage
+          .from(
+            "catalog-images"
+          )
+          .remove([
+            current.path,
+          ]);
+      }
+
+      if (
+        target ===
+        "home"
+      ) {
+        setHomeCovers(
+          (
+            previous
+          ) => {
+            const next = {
+              ...previous,
+            };
+
+            delete next[
+              slug
+            ];
+
+            return next;
+          }
+        );
+      } else {
+        setCatalogCovers(
+          (
+            previous
+          ) => {
+            const next = {
+              ...previous,
+            };
+
+            delete next[
+              slug
+            ];
+
+            return next;
+          }
+        );
+      }
+
       save(
-        "Elige un archivo de imagen válido"
-      );
-      return;
-    }
-
-    if (
-      file.size >
-      3 * 1024 * 1024
-    ) {
-      save(
-        "La imagen debe pesar menos de 3 MB"
-      );
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const value = String(
-        reader.result
-      );
-
-      localStorage.setItem(
-        `tcg-cover-${slug}`,
-        value
-      );
-
-      setCovers((current) => ({
-        ...current,
-        [slug]: value,
-      }));
-
-      save(
-        `Portada de ${
-          coverOptions.find(
-            (cover) =>
-              cover.slug === slug
-          )?.name
-        } actualizada`
+        "Portada eliminada"
       );
     };
 
-    reader.readAsDataURL(file);
-  };
+  /*
+   * Tarjetas reutilizables.
+   */
+  const renderCovers = (
+    target:
+      CoverTarget,
+    covers:
+      CoverMap
+  ) => (
+    <div className="cover-grid">
+      {coverOptions.map(
+        (cover) => {
+          const image =
+            covers[
+              cover.slug
+            ];
 
-  const clear = (slug: string) => {
-    localStorage.removeItem(
-      `tcg-cover-${slug}`
-    );
+          const isUploading =
+            uploading ===
+            `${target}-${cover.slug}`;
 
-    setCovers((current) => ({
-      ...current,
-      [slug]: "",
-    }));
-
-    save("Portada eliminada");
-  };
-
-  return (
-    <section className="image-manager">
-      <div className="payment-intro">
-        <div>
-          <p>Biblioteca visual</p>
-
-          <h2>
-            Portadas por TCG.
-          </h2>
-
-          <span>
-            Sube una portada
-            independiente para cada
-            catálogo. Se mostrará al
-            instante en su página
-            correspondiente.
-          </span>
-        </div>
-
-        <b>JPG · PNG · WebP</b>
-      </div>
-
-      <div className="cover-grid">
-        {coverOptions.map(
-          (cover) => (
+          return (
             <article
               className="cover-card"
-              key={cover.slug}
+              key={`${target}-${cover.slug}`}
             >
               <div
                 className={`cover-preview ${
-                  covers[cover.slug]
+                  image
                     ? "has-image"
                     : ""
                 }`}
                 style={
-                  covers[cover.slug]
+                  image
                     ? {
                         backgroundImage:
-                          `url(${covers[cover.slug]})`,
+                          `url("${image.url}")`,
                       }
                     : undefined
                 }
               >
                 <span>
-                  {covers[cover.slug]
+                  {image
                     ? "Portada cargada"
                     : cover.name}
                 </span>
               </div>
 
               <div>
-                <h3>{cover.name}</h3>
-                <p>{cover.hint}</p>
+                <h3>
+                  {
+                    cover.name
+                  }
+                </h3>
+
+                <p>
+                  {target ===
+                  "home"
+                    ? "Tarjeta que aparece en la página principal."
+                    : `Banner que aparece dentro de ${cover.name}.`}
+                </p>
               </div>
 
               <label className="cover-upload">
-                Cambiar portada
+                {isUploading
+                  ? "Subiendo…"
+                  : image
+                    ? "Cambiar portada"
+                    : "Subir portada"}
 
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
-                  onChange={(event) =>
-                    upload(
-                      cover.slug,
-                      event.target
-                        .files?.[0]
-                    )
+                  disabled={
+                    isUploading
                   }
+                  onChange={(
+                    event
+                  ) => {
+                    const file =
+                      event
+                        .target
+                        .files?.[0];
+
+                    uploadCover(
+                      target,
+                      cover.slug,
+                      cover.name,
+                      file
+                    );
+
+                    event.target.value =
+                      "";
+                  }}
                 />
               </label>
 
-              {covers[
-                cover.slug
-              ] && (
+              {image && (
                 <button
                   className="mini-delete"
+                  type="button"
                   onClick={() =>
-                    clear(cover.slug)
+                    removeCover(
+                      target,
+                      cover.slug
+                    )
                   }
                 >
                   Quitar imagen
                 </button>
               )}
             </article>
-          )
-        )}
+          );
+        }
+      )}
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <section className="admin-card">
+        <p>
+          Biblioteca visual
+        </p>
+
+        <h2>
+          Cargando portadas…
+        </h2>
+      </section>
+    );
+  }
+
+  return (
+    <section className="image-manager">
+      {/* ======================
+          PÁGINA PRINCIPAL
+      ====================== */}
+
+      <div className="payment-intro">
+        <div>
+          <p>
+            Página principal
+          </p>
+
+          <h2>
+            Portadas de inicio.
+          </h2>
+
+          <span>
+            Estas son las tres
+            tarjetas grandes de
+            Pokémon, Riftbound y
+            Yu-Gi-Oh! que aparecen
+            debajo de “Elige tu
+            universo”.
+          </span>
+        </div>
+
+        <b>
+          INICIO
+        </b>
       </div>
 
-      <section className="admin-card image-guidance">
+      {renderCovers(
+        "home",
+        homeCovers
+      )}
+
+      {/* ======================
+          PORTADAS INTERNAS
+      ====================== */}
+
+      <div
+        className="payment-intro"
+        style={{
+          marginTop: 65,
+        }}
+      >
+        <div>
+          <p>
+            Catálogos
+          </p>
+
+          <h2>
+            Portadas internas.
+          </h2>
+
+          <span>
+            Estas imágenes aparecen
+            cuando entras directamente
+            al catálogo de Pokémon,
+            Riftbound o Yu-Gi-Oh!.
+          </span>
+        </div>
+
+        <b>
+          CATÁLOGOS
+        </b>
+      </div>
+
+      {renderCovers(
+        "catalog",
+        catalogCovers
+      )}
+
+      <section
+        className="admin-card image-guidance"
+        style={{
+          marginTop: 30,
+        }}
+      >
         <p>
-          Imágenes de productos
+          Recomendación
         </p>
 
         <span>
-          En la sección{" "}
-          <b>Productos</b> puedes
-          subir varias fotos por
-          artículo. La primera será
-          su portada; las demás
-          quedarán disponibles para
-          su galería.
+          Para las portadas de inicio
+          utiliza imágenes horizontales
+          y deja espacio libre en la
+          zona inferior izquierda,
+          porque ahí aparecerá el nombre
+          del juego y su descripción.
         </span>
       </section>
     </section>
   );
 }
 
+
+/* =========================================
+   PAGOS
+========================================= */
+
 function Payments({
   save,
 }: {
-  save: (message: string) => void;
+  save: (
+    message: string
+  ) => void;
 }) {
   const methods = [
     [
@@ -834,16 +1668,19 @@ function Payments({
       "Recomendado para México",
       "Tarjetas, SPEI y efectivo",
     ],
+
     [
       "Stripe",
       "Pagos con tarjeta",
       "Visa, Mastercard y AMEX",
     ],
+
     [
       "PayPal",
       "Pago desde cuenta",
       "Protección para compradores",
     ],
+
     [
       "Transferencia SPEI",
       "Pago manual",
@@ -855,24 +1692,26 @@ function Payments({
     <section className="payments">
       <div className="payment-intro">
         <div>
-          <p>Métodos de pago</p>
+          <p>
+            Métodos de pago
+          </p>
 
           <h2>
-            Cobra de forma segura.
+            Cobra de forma
+            segura.
           </h2>
 
           <span>
-            Conecta solo los métodos
-            que usarás. Las
-            credenciales se guardarán
-            como variables privadas y
-            nunca se mostrarán a
-            compradores.
+            Conecta solamente
+            los métodos que
+            utilizarás en tu
+            tienda.
           </span>
         </div>
 
         <b>
-          Entorno de preparación
+          Entorno de
+          preparación
         </b>
       </div>
 
@@ -892,20 +1731,36 @@ function Payments({
             >
               <div className="payment-logo">
                 {name
-                  .slice(0, 2)
+                  .slice(
+                    0,
+                    2
+                  )
                   .toUpperCase()}
               </div>
 
               <div>
-                <h3>{name}</h3>
-                <p>{subtitle}</p>
-                <small>{detail}</small>
+                <h3>
+                  {name}
+                </h3>
+
+                <p>
+                  {
+                    subtitle
+                  }
+                </p>
+
+                <small>
+                  {
+                    detail
+                  }
+                </small>
               </div>
 
               <button
+                type="button"
                 onClick={() =>
                   save(
-                    `${name}: configuración pendiente de credenciales`
+                    `${name}: configuración pendiente`
                   )
                 }
               >
@@ -913,7 +1768,8 @@ function Payments({
                 <span>→</span>
               </button>
 
-              {index === 0 && (
+              {index ===
+                0 && (
                 <em>
                   Recomendado
                 </em>
@@ -922,59 +1778,53 @@ function Payments({
           )
         )}
       </div>
-
-      <section className="payment-checklist">
-        <h3>
-          Antes de activar cobros
-        </h3>
-
-        <ul>
-          <li>
-            Cuenta de negocio
-            verificada en la
-            plataforma elegida.
-          </li>
-
-          <li>
-            Política de privacidad,
-            términos y devoluciones
-            publicadas.
-          </li>
-
-          <li>
-            Cuenta bancaria para
-            recibir depósitos.
-          </li>
-
-          <li>
-            Prueba de compra en modo
-            sandbox antes de publicar.
-          </li>
-        </ul>
-      </section>
     </section>
   );
 }
+
+
+/* =========================================
+   PEDIDOS
+========================================= */
 
 function Orders() {
   return (
     <section className="admin-card orders">
       <div className="card-heading">
         <div>
-          <p>Pedidos</p>
+          <p>
+            Pedidos
+          </p>
+
           <h2>
-            Revisión de pedidos
+            Revisión de
+            pedidos
           </h2>
         </div>
 
-        <button>Exportar</button>
+        <button
+          type="button"
+        >
+          Exportar
+        </button>
       </div>
 
       <div className="order-row header">
-        <span>Pedido</span>
-        <span>Cliente</span>
-        <span>Total</span>
-        <span>Estado</span>
+        <span>
+          Pedido
+        </span>
+
+        <span>
+          Cliente
+        </span>
+
+        <span>
+          Total
+        </span>
+
+        <span>
+          Estado
+        </span>
       </div>
 
       {[
@@ -982,27 +1832,35 @@ function Orders() {
         "#0002",
         "#0001",
       ].map(
-        (order, index) => (
+        (
+          order,
+          index
+        ) => (
           <div
             className="order-row"
             key={order}
           >
-            <b>{order}</b>
+            <b>
+              {order}
+            </b>
 
             <span>
-              {index === 0
+              {index ===
+              0
                 ? "Pago por validar"
                 : "Cliente de prueba"}
             </span>
 
             <strong>
-              {index === 0
+              {index ===
+              0
                 ? "—"
                 : "$0.00"}
             </strong>
 
             <em>
-              {index === 0
+              {index ===
+              0
                 ? "Pendiente"
                 : "Borrador"}
             </em>
@@ -1013,15 +1871,23 @@ function Orders() {
   );
 }
 
+
+/* =========================================
+   AJUSTES
+========================================= */
+
 function Settings({
   save,
 }: {
-  save: (message: string) => void;
+  save: (
+    message: string
+  ) => void;
 }) {
   const [
     homeIntro,
     setHomeIntro,
-  ] = useState("");
+  ] =
+    useState("");
 
   useEffect(() => {
     setHomeIntro(
@@ -1031,18 +1897,19 @@ function Settings({
     );
   }, []);
 
-  const saveHomeIntro = () => {
-    localStorage.setItem(
-      "tcg-home-intro",
-      homeIntro.trim()
-    );
+  const saveHomeIntro =
+    () => {
+      localStorage.setItem(
+        "tcg-home-intro",
+        homeIntro.trim()
+      );
 
-    save(
-      homeIntro.trim()
-        ? "Texto de inicio actualizado"
-        : "Texto de inicio eliminado"
-    );
-  };
+      save(
+        homeIntro.trim()
+          ? "Texto de inicio actualizado"
+          : "Texto de inicio eliminado"
+      );
+    };
 
   return (
     <section className="settings">
@@ -1070,6 +1937,7 @@ function Settings({
 
         <button
           className="primary-action"
+          type="button"
           onClick={() =>
             save(
               "Datos de tienda guardados"
@@ -1082,60 +1950,70 @@ function Settings({
 
       <article className="admin-card">
         <p>
-          Texto de la página principal
+          Texto de la página
+          principal
         </p>
 
         <span>
           Agrega una frase breve
           debajo de “Elige tu
-          universo” o déjalo vacío
-          para ocultarla.
+          universo”.
         </span>
 
         <label>
           Mensaje de bienvenida
 
           <input
-            value={homeIntro}
-            onChange={(event) =>
+            value={
+              homeIntro
+            }
+            onChange={(
+              event
+            ) =>
               setHomeIntro(
-                event.target.value
+                event
+                  .target
+                  .value
               )
             }
             placeholder="Ej. Cartas, comunidad y grandes hallazgos."
-            maxLength={120}
+            maxLength={
+              120
+            }
           />
         </label>
 
         <button
           className="primary-action"
-          onClick={saveHomeIntro}
+          type="button"
+          onClick={
+            saveHomeIntro
+          }
         >
-          Guardar texto de inicio
+          Guardar texto
+          de inicio
         </button>
       </article>
 
       <article className="admin-card">
-        <p>Envíos y políticas</p>
+        <p>
+          Envíos y políticas
+        </p>
 
         <span>
-          Configura zonas, tarifas,
-          tiempos de entrega,
-          devoluciones y textos
-          legales antes de abrir
-          ventas.
+          Configura zonas,
+          tarifas, tiempos
+          de entrega y
+          devoluciones.
         </span>
 
-        <button
+        <Link
           className="secondary"
-          onClick={() =>
-            save(
-              "Políticas preparadas para edición"
-            )
-          }
+          href="/politica-de-envios"
         >
-          Editar políticas
-        </button>
+          Ver política de
+          envíos
+        </Link>
       </article>
     </section>
   );

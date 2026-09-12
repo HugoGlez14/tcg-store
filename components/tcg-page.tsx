@@ -1,8 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { AuthButton } from "@/components/auth-button";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  AuthButton,
+} from "@/components/auth-button";
+
+import {
+  supabase,
+} from "@/lib/supabase";
 
 export type StoreConfig = {
   slug: string;
@@ -33,7 +43,7 @@ const tcgStyles = `
 }
 
 .theme-pokemon .product-meta button {
-  background: #e83836;
+  background:#e83836;
 }
 
 .theme-riftbound .store-hero {
@@ -52,7 +62,7 @@ const tcgStyles = `
 }
 
 .theme-riftbound .product-meta button {
-  background: #5c49cf;
+  background:#5c49cf;
 }
 
 .theme-yugioh .store-hero {
@@ -71,24 +81,27 @@ const tcgStyles = `
 }
 
 .theme-yugioh .product-meta button {
-  background: #98372d;
+  background:#98372d;
 }
 
 .admin-access {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 
-  padding: 9px 14px;
+  padding:9px 14px;
 
-  border: 1px solid rgba(11, 16, 32, .18);
-  border-radius: 100px;
+  border:
+    1px solid
+    rgba(11,16,32,.18);
 
-  color: inherit;
+  border-radius:100px;
 
-  font-size: 13px;
+  color:inherit;
 
-  text-decoration: none;
+  font-size:13px;
+
+  text-decoration:none;
 
   transition:
     background .2s ease,
@@ -96,22 +109,22 @@ const tcgStyles = `
 }
 
 .admin-access:hover {
-  background: #0b1020;
-  color: #fff;
+  background:#0b1020;
+  color:#fff;
 }
 
 .store-footer a {
-  text-decoration: none;
+  text-decoration:none;
 }
 
 .store-footer a:hover {
-  color: #5e61e8;
+  color:#5e61e8;
 }
 
-@media(max-width: 800px) {
+@media(max-width:800px) {
   .admin-access {
-    padding: 8px 10px;
-    font-size: 11px;
+    padding:8px 10px;
+    font-size:11px;
   }
 }
 `;
@@ -121,28 +134,93 @@ export function TcgPage({
 }: {
   config: StoreConfig;
 }) {
-  const [cart, setCart] =
-    useState(0);
+  const [
+    cart,
+    setCart,
+  ] = useState(0);
 
-  const [notice, setNotice] =
-    useState("");
+  const [
+    notice,
+    setNotice,
+  ] = useState("");
 
-  const [cover, setCover] =
-    useState("");
+  const [
+    cover,
+    setCover,
+  ] = useState("");
 
+  /*
+   * Obtiene la portada interna
+   * del TCG desde Supabase.
+   */
   useEffect(() => {
-    setCover(
-      localStorage.getItem(
-        `tcg-cover-${config.slug}`
-      ) || ""
-    );
+    if (!supabase) {
+      setCover("");
+      return;
+    }
+
+    const client = supabase;
+
+    const loadCover =
+      async () => {
+        const {
+          data,
+          error,
+        } = await client
+          .from(
+            "catalog_covers"
+          )
+          .select(
+            "storage_path"
+          )
+          .eq(
+            "tcg",
+            config.slug
+          )
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "Error cargando portada:",
+            error
+          );
+
+          setCover("");
+
+          return;
+        }
+
+        if (
+          !data?.storage_path
+        ) {
+          setCover("");
+          return;
+        }
+
+        const {
+          data: publicData,
+        } = client.storage
+          .from(
+            "catalog-images"
+          )
+          .getPublicUrl(
+            data.storage_path
+          );
+
+        setCover(
+          publicData.publicUrl
+        );
+      };
+
+    loadCover();
   }, [config.slug]);
 
   const add = (
     product: string
   ) => {
     setCart(
-      (value) => value + 1
+      (value) =>
+        value + 1
     );
 
     setNotice(
@@ -154,21 +232,23 @@ export function TcgPage({
     }, 2200);
   };
 
-  const heroStyle = cover
-    ? {
-        backgroundImage: `
-          linear-gradient(
-            100deg,
-            rgba(8,10,20,.82),
-            rgba(8,10,20,.25)
-          ),
-          url(${cover})
-        `,
-        backgroundSize: "cover",
-        backgroundPosition:
-          "center",
-      }
-    : undefined;
+  const heroStyle =
+    cover
+      ? {
+          backgroundImage: `
+            linear-gradient(
+              100deg,
+              rgba(8,10,20,.82),
+              rgba(8,10,20,.25)
+            ),
+            url("${cover}")
+          `,
+          backgroundSize:
+            "cover",
+          backgroundPosition:
+            "center",
+        }
+      : undefined;
 
   return (
     <>
@@ -228,15 +308,17 @@ export function TcgPage({
           className="store-hero"
           style={heroStyle}
         >
-          <div
-            className="hero-grid"
-            aria-hidden="true"
-          >
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
+          {!cover && (
+            <div
+              className="hero-grid"
+              aria-hidden="true"
+            >
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          )}
 
           <div className="store-hero-copy">
             <p>
