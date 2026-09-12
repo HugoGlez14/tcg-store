@@ -18,14 +18,15 @@ export default function AdminPage() {
   const [accessMessage, setAccessMessage] = useState("");
   useEffect(() => {
     if (!supabase) { setAccessState("setup"); return; }
+    const client = supabase;
     const checkAccess = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await client.auth.getUser();
       if (!data.user) { setAccessState("login"); return; }
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      const { data: profile } = await client.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
       setAccessState(profile?.role === "admin" ? "allowed" : "denied");
     };
     checkAccess();
-    const { data: listener } = supabase.auth.onAuthStateChange(() => checkAccess());
+    const { data: listener } = client.auth.onAuthStateChange(() => checkAccess());
     return () => listener.subscription.unsubscribe();
   }, []);
   const save = (message: string) => { setSaved(message); setTimeout(() => setSaved(""), 2500); };
