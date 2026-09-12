@@ -4,14 +4,35 @@ import "./admin.css";
 import "./admin-enhancements.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { ProductManager } from "@/components/admin-product-manager";
 
 const tabs = ["Resumen", "Productos", "Imágenes", "Pedidos", "Pagos", "Ajustes"];
 
 export default function AdminPage() {
   const [tab, setTab] = useState("Resumen");
   const [saved, setSaved] = useState("");
+  const [accessState, setAccessState] = useState<"loading" | "setup" | "login" | "denied" | "allowed">("loading");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [accessMessage, setAccessMessage] = useState("");
+  useEffect(() => {
+    if (!supabase) { setAccessState("setup"); return; }
+    const checkAccess = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) { setAccessState("login"); return; }
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      setAccessState(profile?.role === "admin" ? "allowed" : "denied");
+    };
+    checkAccess();
+    const { data: listener } = supabase.auth.onAuthStateChange(() => checkAccess());
+    return () => listener.subscription.unsubscribe();
+  }, []);
   const save = (message: string) => { setSaved(message); setTimeout(() => setSaved(""), 2500); };
-  return <main className="admin-page"><aside className="admin-sidebar"><Link className="wordmark" href="/">[ ] <span>TCG STORE</span></Link><div className="admin-caption">Administración</div><nav>{tabs.map((item) => <button className={tab === item ? "selected" : ""} key={item} onClick={() => setTab(item)}>{item}<span>{item === "Productos" ? "12" : item === "Pedidos" ? "3" : ""}</span></button>)}</nav><div className="admin-user"><b>Administrador</b><span>Acceso principal</span><Link href="/">← Ver tienda</Link></div></aside><section className="admin-main"><header className="admin-top"><div><p>Panel de control</p><h1>{tab}</h1></div><button className="publish" onClick={() => save("Cambios guardados como borrador")}>Guardar cambios</button></header>{tab === "Resumen" && <Overview setTab={setTab} />}{tab === "Productos" && <EditableProductForm save={save} />}{tab === "Imágenes" && <ImageManager save={save} />}{tab === "Pagos" && <Payments save={save} />}{tab === "Pedidos" && <Orders />}{tab === "Ajustes" && <Settings save={save} />}</section>{saved && <output className="admin-toast">✓ {saved}</output>}</main>;
+  const signIn = async (event: React.FormEvent) => { event.preventDefault(); if (!supabase) return; const { error } = await supabase.auth.signInWithPassword({ email, password }); setAccessMessage(error ? error.message : "Acceso correcto."); };
+  const google = async () => { if (supabase) await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/admin` } }); };
+  if (accessState !== "allowed") return <main className="admin-page"><section className="admin-main"><div className="admin-card"><p>Acceso privado</p>{accessState === "loading" && <h1>Verificando acceso…</h1>}{accessState === "setup" && <><h1>Administrador protegido</h1><span>La conexión de datos aún no está configurada. El panel permanece oculto para visitantes.</span></>}{accessState === "login" && <><h1>Inicia sesión</h1><span>Solo cuentas autorizadas pueden editar productos e imágenes.</span><form className="form-panel" onSubmit={signIn}><label>Correo<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label><label>Contraseña<input type="password" minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} required /></label><button className="primary-action" type="submit">Entrar</button></form><button className="secondary" onClick={google}>Continuar con Google</button><p>{accessMessage}</p></>}{accessState === "denied" && <><h1>Cuenta sin permiso</h1><span>El propietario debe asignar a esta cuenta el rol de administrador antes de abrir el panel.</span></>}<br /><br /><Link href="/">← Volver a la tienda</Link></div></section></main>;
+  return <main className="admin-page"><aside className="admin-sidebar"><Link className="wordmark" href="/">[ ] <span>TCG STORE</span></Link><div className="admin-caption">Administración</div><nav>{tabs.map((item) => <button className={tab === item ? "selected" : ""} key={item} onClick={() => setTab(item)}>{item}<span>{item === "Productos" ? "" : item === "Pedidos" ? "" : ""}</span></button>)}</nav><div className="admin-user"><b>Administrador</b><span>Acceso principal</span><Link href="/">← Ver tienda</Link></div></aside><section className="admin-main"><header className="admin-top"><div><p>Panel de control</p><h1>{tab}</h1></div><button className="publish" onClick={() => save("Cambios guardados como borrador")}>Guardar cambios</button></header>{tab === "Resumen" && <Overview setTab={setTab} />}{tab === "Productos" && <ProductManager />}{tab === "Imágenes" && <ImageManager save={save} />}{tab === "Pagos" && <Payments save={save} />}{tab === "Pedidos" && <Orders />}{tab === "Ajustes" && <Settings save={save} />}</section>{saved && <output className="admin-toast">✓ {saved}</output>}</main>;
 }
 
 function Overview({ setTab }: { setTab: (tab: string) => void }) { return <><section className="metrics"><article><small>Ventas del mes</small><strong>$0.00</strong><span>Se activa al conectar pagos</span></article><article><small>Pedidos pendientes</small><strong>03</strong><span>Requieren revisión</span></article><article><small>Productos publicados</small><strong>12</strong><span>3 catálogos activos</span></article></section><section className="admin-grid"><article className="admin-card wide"><div className="card-heading"><div><p>Acceso rápido</p><h2>Prepara tu tienda para vender.</h2></div></div><div className="quick-actions"><button onClick={() => setTab("Productos")}>＋ Añadir producto</button><button onClick={() => setTab("Pagos")}>◉ Configurar pagos</button><button onClick={() => setTab("Ajustes")}>⚙ Ajustes de tienda</button></div></article><article className="admin-card"><p>Estado de lanzamiento</p><div className="launch-progress"><i /><i /><i /><i /></div><ol><li className="done">Catálogos creados</li><li className="done">Estructura de productos</li><li>Conectar pagos</li><li>Publicar inventario</li></ol></article></section></>; }
