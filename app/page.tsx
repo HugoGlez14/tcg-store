@@ -394,13 +394,25 @@ export default function Home() {
             [ ] <span>TCG STORE</span>
           </div>
 
-          <p>Nombre e identidad visual por definir.</p>
+          <p>Los Pokeamigos y un poco mas</p>
 
           <div>
-            <a href="#">Política de privacidad</a>
-            <a href="#">Términos y condiciones</a>
-            <a href="#">Política de envíos</a>
-          </div>
+  <Link href="/politica-de-privacidad">
+    Política de privacidad
+  </Link>
+
+  <Link href="/terminos-y-condiciones">
+    Términos y condiciones
+  </Link>
+
+  <Link href="/politica-de-envios">
+    Política de envíos
+  </Link>
+
+  <Link href="/admin">
+    Administración
+  </Link>
+</div>
         </footer>
       </main>
     </>
