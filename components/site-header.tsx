@@ -1,11 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
-import { AuthButton } from "@/components/auth-button";
-import { useCart } from "@/components/cart-provider";
-import { supabase } from "@/lib/supabase";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
+import {
+  AuthButton,
+} from "@/components/auth-button";
+
+import {
+  useCart,
+} from "@/components/cart-provider";
+
+import {
+  supabase,
+} from "@/lib/supabase";
 
 import styles from "./site-header.module.css";
 
@@ -14,9 +27,13 @@ type TcgSlug =
   | "riftbound"
   | "yugioh";
 
-type LogoMap = Partial<
-  Record<TcgSlug, string>
->;
+type LogoMap =
+  Partial<
+    Record<
+      TcgSlug,
+      string
+    >
+  >;
 
 const games: {
   slug: TcgSlug;
@@ -28,11 +45,13 @@ const games: {
     name: "Pokémon",
     href: "/pokemon",
   },
+
   {
     slug: "riftbound",
     name: "Riftbound",
     href: "/riftbound",
   },
+
   {
     slug: "yugioh",
     name: "Yu-Gi-Oh!",
@@ -49,21 +68,26 @@ const money =
     }
   );
 
-function preloadImage(src: string) {
+function preloadImage(
+  src: string
+) {
   return new Promise<void>(
     (resolve) => {
       const image =
         new Image();
 
-      image.onload = () =>
-        resolve();
+      image.onload =
+        () => resolve();
 
-      image.onerror = () =>
-        resolve();
+      image.onerror =
+        () => resolve();
 
-      image.src = src;
+      image.src =
+        src;
 
-      if (image.complete) {
+      if (
+        image.complete
+      ) {
         resolve();
       }
     }
@@ -73,28 +97,41 @@ function preloadImage(src: string) {
 export function SiteHeader({
   variant = "light",
 }: {
-  variant?: "light" | "dark";
+  variant?:
+    | "light"
+    | "dark";
 }) {
-  const [logos, setLogos] =
-    useState<LogoMap>({});
+  const [
+    logos,
+    setLogos,
+  ] =
+    useState<LogoMap>(
+      {}
+    );
 
   const [
     logosLoading,
     setLogosLoading,
-  ] = useState(true);
+  ] =
+    useState(true);
 
-  const [cartOpen, setCartOpen] =
+  const [
+    cartOpen,
+    setCartOpen,
+  ] =
     useState(false);
 
   const [
     isScrolled,
     setIsScrolled,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const [
     isHidden,
     setIsHidden,
-  ] = useState(false);
+  ] =
+    useState(false);
 
   const lastScrollY =
     useRef(0);
@@ -111,7 +148,10 @@ export function SiteHeader({
 
   useEffect(() => {
     if (!supabase) {
-      setLogosLoading(false);
+      setLogosLoading(
+        false
+      );
+
       return;
     }
 
@@ -123,67 +163,146 @@ export function SiteHeader({
         const {
           data,
           error,
-        } = await client
-          .from("tcg_logos")
-          .select(
-            "tcg,storage_path"
-          );
+        } =
+          await client
+            .from(
+              "tcg_logos"
+            )
+            .select(
+              "tcg,storage_path"
+            );
 
         if (error) {
           console.error(
             "No se pudieron cargar los logos:",
             error
           );
-          setLogosLoading(false);
+
+          setLogosLoading(
+            false
+          );
+
           return;
         }
 
-        const next: LogoMap =
-          {};
+        const next:
+          LogoMap = {};
 
-        const urls: string[] =
-          [];
+        const urls:
+          string[] = [];
 
-        for (const row of data ?? []) {
+        for (
+          const row of
+          data ?? []
+        ) {
           if (
             ![
               "pokemon",
               "riftbound",
               "yugioh",
-            ].includes(row.tcg)
+            ].includes(
+              row.tcg
+            )
           ) {
             continue;
           }
 
           const {
-            data: publicData,
-          } = client.storage
-            .from(
-              "catalog-images"
-            )
-            .getPublicUrl(
-              row.storage_path
-            );
+            data:
+              publicData,
+          } =
+            client.storage
+              .from(
+                "catalog-images"
+              )
+              .getPublicUrl(
+                row.storage_path
+              );
 
           const url =
             publicData.publicUrl;
 
           next[
-            row.tcg as TcgSlug
+            row.tcg as
+              TcgSlug
           ] = url;
 
-          urls.push(url);
+          urls.push(
+            url
+          );
         }
 
         await Promise.allSettled(
-          urls.map(preloadImage)
+          urls.map(
+            preloadImage
+          )
         );
 
-        setLogos(next);
-        setLogosLoading(false);
+        setLogos(
+          next
+        );
+
+        setLogosLoading(
+          false
+        );
       };
 
     loadLogos();
+  }, []);
+
+  useEffect(() => {
+    const handleScroll =
+      () => {
+        const y =
+          window.scrollY;
+
+        setIsScrolled(
+          y > 16
+        );
+
+        const diff =
+          y -
+          lastScrollY.current;
+
+        if (y <= 20) {
+          setIsHidden(
+            false
+          );
+        } else if (
+          diff > 8
+        ) {
+          setIsHidden(
+            true
+          );
+        } else if (
+          diff < -8
+        ) {
+          setIsHidden(
+            false
+          );
+        }
+
+        lastScrollY.current =
+          y;
+      };
+
+    handleScroll();
+
+    window.addEventListener(
+      "scroll",
+      handleScroll,
+      {
+        passive:
+          true,
+      }
+    );
+
+    return () => {
+      window.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+    };
   }, []);
 
   useEffect(() => {
@@ -192,16 +311,20 @@ export function SiteHeader({
         ? "hidden"
         : "";
 
-    const closeOnEscape = (
-      event: KeyboardEvent
-    ) => {
-      if (
-        event.key ===
-        "Escape"
-      ) {
-        setCartOpen(false);
-      }
-    };
+    const closeOnEscape =
+      (
+        event:
+          KeyboardEvent
+      ) => {
+        if (
+          event.key ===
+          "Escape"
+        ) {
+          setCartOpen(
+            false
+          );
+        }
+      };
 
     window.addEventListener(
       "keydown",
@@ -219,63 +342,34 @@ export function SiteHeader({
     };
   }, [cartOpen]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const y =
-        window.scrollY;
-
-      setIsScrolled(y > 16);
-
-      const diff =
-        y - lastScrollY.current;
-
-      if (y <= 20) {
-        setIsHidden(false);
-      } else if (diff > 8) {
-        setIsHidden(true);
-      } else if (diff < -8) {
-        setIsHidden(false);
-      }
-
-      lastScrollY.current = y;
-    };
-
-    handleScroll();
-
-    window.addEventListener(
-      "scroll",
-      handleScroll,
-      { passive: true }
-    );
-
-    return () => {
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-    };
-  }, []);
-
   return (
     <>
       <header
         className={[
           styles.header,
-          variant === "dark"
+
+          variant ===
+          "dark"
             ? styles.dark
             : styles.light,
+
           isScrolled
             ? styles.scrolled
             : "",
+
           isHidden
             ? styles.hidden
             : "",
         ]
-          .filter(Boolean)
+          .filter(
+            Boolean
+          )
           .join(" ")}
       >
         <Link
-          className={styles.brand}
+          className={
+            styles.brand
+          }
           href="/"
           aria-label="Ir al inicio de Pokeamigos"
         >
@@ -325,8 +419,7 @@ export function SiteHeader({
                     }
                     src={
                       logos[
-                        game
-                          .slug
+                        game.slug
                       ]
                     }
                     alt={
@@ -352,22 +445,15 @@ export function SiteHeader({
         >
           <AuthButton />
 
-          <Link
-            className={
-              styles.admin
-            }
-            href="/admin"
-          >
-            Admin
-          </Link>
-
           <button
             className={
               styles.cartButton
             }
             type="button"
             onClick={() =>
-              setCartOpen(true)
+              setCartOpen(
+                true
+              )
             }
             aria-expanded={
               cartOpen
@@ -376,7 +462,9 @@ export function SiteHeader({
           >
             Carrito
 
-            <b>{totalItems}</b>
+            <b>
+              {totalItems}
+            </b>
           </button>
         </div>
       </header>
@@ -394,7 +482,9 @@ export function SiteHeader({
             type="button"
             aria-label="Cerrar carrito"
             onClick={() =>
-              setCartOpen(false)
+              setCartOpen(
+                false
+              )
             }
           />
 
@@ -426,7 +516,9 @@ export function SiteHeader({
                 }
                 type="button"
                 onClick={() =>
-                  setCartOpen(false)
+                  setCartOpen(
+                    false
+                  )
                 }
                 aria-label="Cerrar carrito"
               >
@@ -441,11 +533,13 @@ export function SiteHeader({
                   styles.emptyCart
                 }
               >
-                <span>◇</span>
+                <span>
+                  ◇
+                </span>
 
                 <h3>
-                  Tu carrito está
-                  vacío.
+                  Tu carrito
+                  está vacío.
                 </h3>
 
                 <p>
@@ -458,7 +552,9 @@ export function SiteHeader({
                 <button
                   type="button"
                   onClick={() =>
-                    setCartOpen(false)
+                    setCartOpen(
+                      false
+                    )
                   }
                 >
                   Seguir explorando
@@ -589,7 +685,9 @@ export function SiteHeader({
                     </span>
 
                     <b>
-                      {totalItems}
+                      {
+                        totalItems
+                      }
                     </b>
                   </div>
 
@@ -613,10 +711,9 @@ export function SiteHeader({
                     <p>
                       Los productos
                       con precio por
-                      confirmar
-                      todavía no se
-                      incluyen en el
-                      subtotal.
+                      confirmar no se
+                      incluyen todavía
+                      en el subtotal.
                     </p>
                   )}
 
@@ -638,7 +735,9 @@ export function SiteHeader({
                     }
                     type="button"
                     onClick={() =>
-                      setCartOpen(false)
+                      setCartOpen(
+                        false
+                      )
                     }
                   >
                     Seguir comprando
