@@ -1,36 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  SiteHeader,
-} from "@/components/site-header";
-
-import {
-  SiteFooter,
-} from "@/components/site-footer";
-
-import {
-  supabase,
-} from "@/lib/supabase";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { supabase } from "@/lib/supabase";
 
 type TcgSlug =
   | "pokemon"
   | "riftbound"
   | "yugioh";
 
-type MediaMap =
-  Partial<
-    Record<
-      TcgSlug,
-      string
-    >
-  >;
+type MediaMap = Partial<
+  Record<TcgSlug, string>
+>;
 
 const games: {
   slug: TcgSlug;
@@ -39,47 +23,37 @@ const games: {
   detail: string;
   marker: string;
   tone: string;
+  chip: string;
 }[] = [
   {
     slug: "pokemon",
     name: "Pokémon",
     href: "/pokemon",
-
     detail:
-      "Expansiones, producto sellado, cartas individuales y accesorios.",
-
+      "Expansiones, sellado, cartas individuales y accesorios.",
     marker: "01",
-
-    tone:
-      "home-pokemon",
+    tone: "home-pokemon",
+    chip: "Coleccionable",
   },
-
   {
     slug: "riftbound",
     name: "Riftbound",
     href: "/riftbound",
-
     detail:
       "Lanzamientos, preventas y cartas para construir tu siguiente mazo.",
-
     marker: "02",
-
-    tone:
-      "home-riftbound",
+    tone: "home-riftbound",
+    chip: "Estrategia",
   },
-
   {
     slug: "yugioh",
     name: "Yu-Gi-Oh!",
     href: "/yugioh",
-
     detail:
-      "Producto sellado, staples, coleccionables y cartas para duelo.",
-
+      "Producto sellado, staples y cartas para duelo.",
     marker: "03",
-
-    tone:
-      "home-yugioh",
+    tone: "home-yugioh",
+    chip: "Competitivo",
   },
 ];
 
@@ -87,901 +61,546 @@ const picks = [
   {
     name:
       "Destined Rivals",
-
-    game:
-      "Pokémon",
-
-    href:
-      "/pokemon",
-
-    tag:
-      "Nueva expansión",
-
-    color:
-      "pick-pokemon",
+    game: "Pokémon",
+    href: "/pokemon",
+    tag: "Nueva expansión",
+    color: "pick-pokemon",
   },
-
   {
     name:
       "Spiritforged",
-
-    game:
-      "Riftbound",
-
-    href:
-      "/riftbound",
-
-    tag:
-      "Preventa",
-
-    color:
-      "pick-riftbound",
+    game: "Riftbound",
+    href: "/riftbound",
+    tag: "Preventa",
+    color: "pick-riftbound",
   },
-
   {
     name:
       "Alliance Insight",
-
-    game:
-      "Yu-Gi-Oh!",
-
-    href:
-      "/yugioh",
-
-    tag:
-      "Producto sellado",
-
-    color:
-      "pick-yugioh",
+    game: "Yu-Gi-Oh!",
+    href: "/yugioh",
+    tag: "Producto sellado",
+    color: "pick-yugioh",
   },
-
   {
     name:
       "Colecciones premium",
-
-    game:
-      "Pokémon",
-
-    href:
-      "/pokemon",
-
-    tag:
-      "Para coleccionar",
-
-    color:
-      "pick-pokemon",
+    game: "Pokémon",
+    href: "/pokemon",
+    tag: "Para coleccionar",
+    color: "pick-pokemon",
   },
 ];
 
 const styles = `
-
-/* =========================================
-   PÁGINA PRINCIPAL
-========================================= */
-
 .home-page {
   min-height: 100vh;
-
-  background:
-    #0b1020;
-
+  background: #07101f;
+  color: #f5f7ff;
   overflow-x: hidden;
 }
 
-
-/* =========================================
+/* ==========================
    HERO
-========================================= */
+========================== */
 
 .home-intro {
   position: relative;
-
-  min-height:
-    clamp(
-      540px,
-      70vh,
-      690px
-    );
+  min-height: 100vh;
+  padding:
+    130px
+    clamp(24px, 6vw, 105px)
+    70px;
 
   display: grid;
-
   grid-template-columns:
-    minmax(0, 1.1fr)
-    minmax(390px, .9fr);
-
+    minmax(0, 1.05fr)
+    minmax(340px, .95fr);
   align-items: center;
-
-  gap:
-    clamp(
-      45px,
-      7vw,
-      110px
-    );
-
-  padding:
-    clamp(
-      70px,
-      8vw,
-      115px
-    )
-    clamp(
-      28px,
-      7vw,
-      118px
-    );
-
-  overflow: hidden;
+  gap: clamp(28px, 6vw, 70px);
 
   background:
     radial-gradient(
-      circle at 8% 88%,
-      rgba(
-        99,
-        205,
-        255,
-        .36
-      ),
-      transparent 32%
+      circle at 12% 22%,
+      rgba(82, 152, 255, 0.26),
+      transparent 28%
     ),
-
     radial-gradient(
-      circle at 88% 18%,
-      rgba(
-        234,
-        160,
-        255,
-        .34
-      ),
-      transparent 34%
+      circle at 85% 15%,
+      rgba(161, 88, 255, 0.24),
+      transparent 30%
     ),
-
+    radial-gradient(
+      circle at 82% 82%,
+      rgba(63, 225, 205, 0.16),
+      transparent 24%
+    ),
     linear-gradient(
-      135deg,
-      #eef3ff 0%,
-      #f4f0ff 46%,
-      #fff0f4 100%
+      145deg,
+      #07101f 0%,
+      #0c1831 48%,
+      #12142c 100%
     );
-
-  color:
-    #0b1020;
 }
 
 .home-intro::before {
   content: "";
-
   position: absolute;
-
   inset: 0;
-
-  background-image:
+  background:
     linear-gradient(
-      rgba(
-        11,
-        16,
-        32,
-        .028
-      )
-      1px,
-      transparent
-      1px
+      rgba(255,255,255,.035) 1px,
+      transparent 1px
     ),
-
     linear-gradient(
       90deg,
-      rgba(
-        11,
-        16,
-        32,
-        .028
-      )
-      1px,
-      transparent
-      1px
+      rgba(255,255,255,.035) 1px,
+      transparent 1px
     );
-
-  background-size:
-    54px 54px;
-
-  pointer-events:
-    none;
+  background-size: 48px 48px;
+  mask-image: linear-gradient(
+    180deg,
+    rgba(0,0,0,.9),
+    rgba(0,0,0,.45)
+  );
+  pointer-events: none;
 }
 
-.home-intro-copy {
-  position: relative;
+.home-intro::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 180px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(7,16,31,0),
+      #07101f
+    );
+  pointer-events: none;
+}
 
+.home-intro-copy,
+.hero-stage {
+  position: relative;
   z-index: 2;
 }
 
 .home-kicker {
-  display:
-    inline-flex;
-
-  align-items:
-    center;
-
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
+  margin: 0 0 25px;
 
-  margin:
-    0 0 25px;
-
-  color:
-    #626d83;
-
-  font-size:
-    10px;
-
-  font-weight:
-    800;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    .17em;
+  color: #9fb1cf;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .18em;
 }
 
 .home-kicker::before {
   content: "";
-
-  width: 31px;
-
+  width: 30px;
   height: 1px;
-
-  background:
-    #626d83;
+  background: rgba(159,177,207,.8);
 }
 
 .home-intro h1 {
-  max-width:
-    760px;
-
   margin: 0;
+  max-width: 760px;
 
   font:
-    750
-    clamp(
-      70px,
-      8.8vw,
-      145px
-    )
-    /
-    .78
+    800
+    clamp(68px, 9vw, 150px)
+    /.8
     Arial,
     Helvetica,
     sans-serif;
-
-  letter-spacing:
-    -.085em;
+  letter-spacing: -.085em;
+  color: #f5f8ff;
 }
 
 .home-intro h1 i {
-  display:
-    inline-block;
-
-  color:
-    #ff4764;
-
-  font-style:
-    italic;
-
+  display: inline-block;
+  font-style: italic;
+  color: #ff5978;
   text-shadow:
-    0
-    4px
-    0
-    #ffd758;
+    0 4px 0 #ffd758,
+    0 20px 40px rgba(255, 89, 120, .22);
 }
 
 .home-intro-message {
-  max-width:
-    550px;
-
-  margin:
-    34px 0 0;
-
-  color:
-    #555f75;
-
-  font-size:
-    15px;
-
-  line-height:
-    1.65;
+  max-width: 580px;
+  margin: 28px 0 0;
+  color: #b6c3d9;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .hero-actions {
   display: flex;
-
-  align-items:
-    center;
-
-  flex-wrap:
-    wrap;
-
+  align-items: center;
+  flex-wrap: wrap;
   gap: 13px;
-
-  margin-top:
-    34px;
+  margin-top: 34px;
 }
 
 .hero-primary {
-  display:
-    inline-flex;
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
 
-  align-items:
-    center;
+  min-height: 48px;
+  padding: 0 18px;
 
-  gap: 26px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    #ffffff,
+    #d9f8ff
+  );
+  color: #091123;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
 
-  min-height:
-    47px;
-
-  padding:
-    0 19px;
-
-  border-radius:
-    100px;
-
-  background:
-    #0b1020;
-
-  color:
-    #fff;
-
-  text-decoration:
-    none;
-
-  font-size:
-    13px;
-
-  font-weight:
-    700;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, .22);
 
   transition:
     transform .2s ease,
-    background .2s ease;
+    box-shadow .2s ease;
 }
 
 .hero-primary:hover {
-  transform:
-    translateY(-2px);
-
-  background:
-    #242d4c;
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, .28);
 }
 
 .hero-secondary {
-  display:
-    inline-flex;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 18px;
 
-  align-items:
-    center;
+  border: 1px solid
+    rgba(255,255,255,.12);
+  border-radius: 999px;
 
-  min-height:
-    47px;
+  background: rgba(255,255,255,.04);
+  color: #edf2ff;
+  text-decoration: none;
+  font-size: 13px;
 
-  padding:
-    0 17px;
-
-  border:
-    1px solid
-    rgba(
-      11,
-      16,
-      32,
-      .16
-    );
-
-  border-radius:
-    100px;
-
-  color:
-    #0b1020;
-
-  text-decoration:
-    none;
-
-  font-size:
-    13px;
+  backdrop-filter: blur(8px);
 }
 
+.hero-meta {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+  margin-top: 34px;
+  max-width: 620px;
+}
 
-/* =========================================
-   PANEL DERECHO HERO
-========================================= */
-
-.hero-showcase {
-  position: relative;
-
-  z-index: 2;
-
-  min-height:
-    420px;
-
-  padding:
-    clamp(
-      24px,
-      3vw,
-      38px
+.hero-meta-card {
+  padding: 14px 14px 13px;
+  border: 1px solid
+    rgba(255,255,255,.08);
+  border-radius: 16px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.03)
     );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06);
+}
 
-  display: flex;
+.hero-meta-card b {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffffff;
+  font-size: 13px;
+}
 
-  flex-direction:
-    column;
+.hero-meta-card span {
+  color: #9fb1cf;
+  font-size: 11px;
+  line-height: 1.45;
+}
 
-  justify-content:
-    space-between;
+/* ==========================
+   HERO RIGHT SIDE
+========================== */
 
+.hero-stage {
+  display: grid;
+  gap: 18px;
+}
+
+.stage-panel {
+  position: relative;
   overflow: hidden;
 
-  border:
-    1px solid
-    rgba(
-      11,
-      16,
-      32,
-      .09
-    );
-
-  border-radius:
-    34px;
+  border: 1px solid
+    rgba(255,255,255,.08);
+  border-radius: 30px;
 
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .52
+    linear-gradient(
+      160deg,
+      rgba(255,255,255,.08),
+      rgba(255,255,255,.03)
     );
+  backdrop-filter: blur(16px);
 
   box-shadow:
-    0
-    35px
-    90px
-    rgba(
-      43,
-      50,
-      88,
-      .13
-    );
-
-  backdrop-filter:
-    blur(18px);
+    0 30px 80px rgba(0,0,0,.28);
 }
 
-.hero-showcase::before {
+.stage-panel::before {
   content: "";
-
   position: absolute;
-
-  width: 300px;
-
-  height: 300px;
-
-  right: -100px;
-
-  top: -100px;
-
-  border-radius:
-    50%;
-
+  inset: auto -20% -35% auto;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
   background:
-    rgba(
-      120,
-      103,
-      242,
-      .19
+    radial-gradient(
+      circle,
+      rgba(110, 225, 216, .22),
+      transparent 65%
     );
-
-  filter:
-    blur(30px);
+  pointer-events: none;
 }
 
-.showcase-heading {
-  position: relative;
-
-  z-index: 2;
+.stage-feature {
+  padding: 26px;
 }
 
-.showcase-heading small {
+.stage-feature small {
   display: block;
+  margin-bottom: 10px;
 
-  margin-bottom:
-    12px;
-
-  color:
-    #757f94;
-
-  font-size:
-    9px;
-
-  font-weight:
-    800;
-
-  letter-spacing:
-    .17em;
-
-  text-transform:
-    uppercase;
+  color: #8fa7c8;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
 }
 
-.showcase-heading h2 {
-  max-width:
-    400px;
-
-  margin: 0;
-
+.stage-feature h2 {
+  margin: 0 0 22px;
+  color: #fff;
   font:
     400
-    clamp(
-      31px,
-      3vw,
-      48px
-    )
-    /
-    .98
+    clamp(32px, 4vw, 48px)
+    /.95
     Georgia,
     serif;
-
-  letter-spacing:
-    -.045em;
+  letter-spacing: -.05em;
 }
 
-.hero-universes {
-  position: relative;
-
-  z-index: 2;
-
+.stage-list {
   display: grid;
-
-  gap: 10px;
-
-  margin:
-    32px 0;
+  gap: 12px;
 }
 
-.hero-universe {
-  min-height:
-    66px;
-
-  padding:
-    10px 15px;
-
+.stage-link {
+  min-height: 78px;
   display: grid;
-
   grid-template-columns:
-    44px
+    46px
     1fr
     auto;
-
-  align-items:
-    center;
-
+  align-items: center;
   gap: 14px;
 
-  border:
-    1px solid
-    rgba(
-      11,
-      16,
-      32,
-      .08
-    );
+  padding: 12px 14px;
 
-  border-radius:
-    15px;
+  border: 1px solid
+    rgba(255,255,255,.08);
+  border-radius: 18px;
 
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .66
-    );
+    rgba(255,255,255,.045);
 
-  color:
-    #0b1020;
-
-  text-decoration:
-    none;
+  text-decoration: none;
+  color: #fff;
 
   transition:
     transform .2s ease,
+    border-color .2s ease,
     background .2s ease;
 }
 
-.hero-universe:hover {
-  transform:
-    translateX(5px);
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      .93
-    );
+.stage-link:hover {
+  transform: translateX(4px);
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.16);
 }
 
-.universe-number {
-  width: 38px;
-
-  height: 38px;
+.stage-num {
+  width: 40px;
+  height: 40px;
 
   display: grid;
+  place-items: center;
 
-  place-items:
-    center;
+  border-radius: 50%;
+  background: #091123;
+  color: #fff;
 
-  border-radius:
-    50%;
-
-  background:
-    #0b1020;
-
-  color:
-    #fff;
-
-  font:
-    12px
-    Georgia,
-    serif;
+  font-size: 11px;
+  font-weight: 800;
 }
 
-.hero-universe-logo {
+.stage-logo {
   display: block;
-
-  width:
-    min(
-      130px,
-      100%
-    );
-
-  height: 35px;
-
-  object-fit:
-    contain;
-
-  object-position:
-    left center;
+  width: min(136px, 100%);
+  height: 34px;
+  object-fit: contain;
+  object-position: left center;
 }
 
-.universe-fallback {
-  font-size:
-    14px;
-
-  font-weight:
-    800;
+.stage-fallback {
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.hero-universe > b {
-  color:
-    #747e92;
-
-  font-size:
-    17px;
+.stage-arrow {
+  color: #88a4cf;
+  font-size: 18px;
 }
 
-.showcase-footer {
-  position: relative;
-
-  z-index: 2;
-
+.stage-bottom {
   display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 
-  grid-template-columns:
-    repeat(
-      3,
-      1fr
-    );
-
-  gap: 8px;
+  padding: 0 26px 26px;
 }
 
-.showcase-footer div {
-  padding:
-    13px 10px;
-
-  border-radius:
-    13px;
-
+.stage-chip {
+  padding: 14px 12px;
+  border-radius: 16px;
   background:
-    rgba(
-      11,
-      16,
-      32,
-      .06
-    );
+    rgba(255,255,255,.05);
+  border: 1px solid
+    rgba(255,255,255,.06);
 }
 
-.showcase-footer b {
+.stage-chip b {
   display: block;
-
-  margin-bottom:
-    3px;
-
-  font-size:
-    12px;
+  margin-bottom: 5px;
+  color: #fff;
+  font-size: 12px;
 }
 
-.showcase-footer span {
-  color:
-    #737d92;
-
-  font-size:
-    9px;
+.stage-chip span {
+  color: #90a2c2;
+  font-size: 10px;
+  line-height: 1.4;
 }
 
-
-/* =========================================
-   DIVISOR ENTRE HERO Y CATÁLOGOS
-========================================= */
+/* ==========================
+   TRANSITION
+========================== */
 
 .home-transition {
-  padding:
-    20px
-    clamp(
-      20px,
-      4vw,
-      64px
-    );
-
   display: flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
+  align-items: center;
+  justify-content: space-between;
   gap: 20px;
 
+  padding:
+    22px
+    clamp(20px, 4vw, 64px);
+
   background:
-    #0c1223;
-
-  color:
-    #8f99ae;
-
-  border-bottom:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .07
+    linear-gradient(
+      180deg,
+      #07101f,
+      #091327
     );
+  border-top: 1px solid
+    rgba(255,255,255,.05);
+  border-bottom: 1px solid
+    rgba(255,255,255,.06);
 
-  font-size:
-    10px;
-
-  font-weight:
-    700;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    .13em;
+  color: #8fa0be;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
 }
 
 .home-transition span:last-child {
-  color:
-    #72e1d6;
+  color: #6fe2d6;
 }
 
-
-/* =========================================
-   TARJETAS PRINCIPALES
-========================================= */
+/* ==========================
+   GAME LINKS
+========================== */
 
 .game-links {
   display: grid;
-
   grid-template-columns:
-    repeat(
-      3,
-      1fr
-    );
-
+    repeat(3, 1fr);
   gap: 16px;
 
   padding:
-    clamp(
-      38px,
-      5vw,
-      66px
-    )
-    clamp(
-      20px,
-      4vw,
-      64px
-    )
-    clamp(
-      60px,
-      7vw,
-      95px
-    );
+    clamp(38px, 5vw, 66px)
+    clamp(20px, 4vw, 64px)
+    clamp(60px, 7vw, 95px);
 
   background:
     radial-gradient(
       circle at 100% 0,
-      rgba(
-        69,
-        230,
-        214,
-        .15
-      ),
+      rgba(69,230,214,.12),
       transparent 28%
     ),
-
     radial-gradient(
       circle at 0 100%,
-      rgba(
-        113,
-        89,
-        231,
-        .14
-      ),
+      rgba(113,89,231,.12),
       transparent 30%
     ),
-
     linear-gradient(
       180deg,
-      #11172c,
-      #0c1223
+      #091327,
+      #0b1323
     );
 }
 
 .game-link {
-  min-height:
-    390px;
+  min-height: 390px;
+  padding: 21px;
 
-  padding:
-    21px;
+  position: relative;
+  overflow: hidden;
 
-  position:
-    relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
-  overflow:
-    hidden;
+  isolation: isolate;
 
-  display:
-    flex;
+  border: 1px solid
+    rgba(255,255,255,.08);
+  border-radius: 24px;
 
-  flex-direction:
-    column;
-
-  justify-content:
-    space-between;
-
-  isolation:
-    isolate;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .09
-    );
-
-  border-radius:
-    24px;
-
-  color:
-    #fff;
+  color: #fff;
+  text-decoration: none;
 
   box-shadow:
-    0
-    22px
-    55px
-    rgba(
-      0,
-      0,
-      0,
-      .24
-    );
+    0 22px 55px rgba(0,0,0,.24);
 
   transition:
     transform .25s ease,
@@ -989,19 +608,9 @@ const styles = `
 }
 
 .game-link:hover {
-  transform:
-    translateY(-7px);
-
+  transform: translateY(-7px);
   box-shadow:
-    0
-    35px
-    70px
-    rgba(
-      0,
-      0,
-      0,
-      .32
-    );
+    0 35px 70px rgba(0,0,0,.32);
 }
 
 .home-pokemon {
@@ -1036,398 +645,212 @@ const styles = `
 
 .game-card-cover {
   position: absolute;
-
   inset: 0;
-
   z-index: -3;
-
   width: 100%;
-
   height: 100%;
-
   object-fit: cover;
+  object-position: center;
 
-  object-position:
-    center;
-
-  transition:
-    transform .4s ease;
+  transition: transform .4s ease;
 }
 
-.game-link:hover
-.game-card-cover {
-  transform:
-    scale(1.045);
+.game-link:hover .game-card-cover {
+  transform: scale(1.04);
 }
 
 .game-link::after {
   content: "";
-
   position: absolute;
-
   inset: 0;
-
   z-index: -2;
-
   background:
     linear-gradient(
       180deg,
-      rgba(
-        5,
-        8,
-        18,
-        .08
-      )
-      0%,
-
-      rgba(
-        5,
-        8,
-        18,
-        .26
-      )
-      40%,
-
-      rgba(
-        5,
-        8,
-        18,
-        .92
-      )
-      100%
+      rgba(5,8,18,.08) 0%,
+      rgba(5,8,18,.28) 45%,
+      rgba(5,8,18,.94) 100%
     );
 }
 
 .game-shape {
-  position:
-    absolute;
+  position: absolute;
+  right: -16px;
+  top: 57px;
+  z-index: -1;
+  width: 70%;
+  aspect-ratio: .7;
+  transform: rotate(13deg);
 
-  right:
-    -16px;
-
-  top:
-    57px;
-
-  z-index:
-    -1;
-
-  width:
-    70%;
-
-  aspect-ratio:
-    .7;
-
-  transform:
-    rotate(13deg);
-
-  border:
-    2px solid
-    rgba(
-      255,
-      255,
-      255,
-      .58
-    );
-
-  border-radius:
-    7px;
+  border: 2px solid
+    rgba(255,255,255,.58);
+  border-radius: 7px;
 }
 
 .game-shape span {
-  display:
-    block;
-
-  height:
-    1px;
-
-  margin:
-    20%;
-
+  display: block;
+  height: 1px;
+  margin: 20%;
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .38
-    );
+    rgba(255,255,255,.38);
 }
 
 .game-link-top {
   display: flex;
+  justify-content: space-between;
+  gap: 20px;
 
-  justify-content:
-    space-between;
-
-  gap:
-    20px;
-
-  font-size:
-    11px;
-
-  font-weight:
-    700;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .game-link-top span {
-  padding-bottom:
-    4px;
-
-  border-bottom:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .7
-    );
+  padding-bottom: 4px;
+  border-bottom: 1px solid
+    rgba(255,255,255,.7);
 }
 
 .game-card-logo {
-  display:
-    block;
-
-  width:
-    min(
-      270px,
-      76%
-    );
-
-  max-height:
-    86px;
-
-  margin-bottom:
-    14px;
-
-  object-fit:
-    contain;
-
-  object-position:
-    left center;
+  display: block;
+  width: min(270px, 76%);
+  max-height: 86px;
+  margin-bottom: 14px;
+  object-fit: contain;
+  object-position: left center;
 
   filter:
     drop-shadow(
-      0
-      8px
-      16px
-      rgba(
-        0,
-        0,
-        0,
-        .35
-      )
+      0 8px 16px rgba(0,0,0,.35)
     );
 }
 
 .game-link h2 {
-  margin:
-    0 0 14px;
-
+  margin: 0 0 14px;
   font:
     400
-    clamp(
-      42px,
-      4vw,
-      65px
-    )
-    /
-    .9
+    clamp(42px, 4vw, 65px)
+    /.9
     Georgia,
     serif;
+  letter-spacing: -.055em;
+}
 
-  letter-spacing:
-    -.055em;
+.game-chip {
+  display: inline-flex;
+  width: max-content;
+  margin-bottom: 10px;
+  padding: 7px 10px;
+
+  border-radius: 999px;
+  background:
+    rgba(255,255,255,.12);
+  border: 1px solid
+    rgba(255,255,255,.16);
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .game-link p {
-  max-width:
-    300px;
-
+  max-width: 300px;
   margin: 0;
 
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      .88
-    );
-
-  font-size:
-    13px;
-
-  line-height:
-    1.48;
+  color: rgba(255,255,255,.9);
+  font-size: 13px;
+  line-height: 1.48;
 }
 
-
-/* =========================================
-   CARRUSEL
-========================================= */
+/* ==========================
+   PICKS
+========================== */
 
 .home-carousel {
   padding:
-    clamp(
-      65px,
-      8vw,
-      115px
-    )
-    clamp(
-      20px,
-      7vw,
-      112px
-    );
+    clamp(65px, 8vw, 115px)
+    clamp(20px, 7vw, 112px);
 
   background:
-    #11172a;
+    linear-gradient(
+      180deg,
+      #11172a,
+      #0d1425
+    );
 
-  color:
-    #f6f7fb;
+  color: #f6f7fb;
 }
 
 .carousel-heading {
-  display:
-    flex;
-
-  align-items:
-    end;
-
-  justify-content:
-    space-between;
-
-  gap:
-    25px;
-
-  margin-bottom:
-    32px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 32px;
 }
 
 .carousel-heading p {
-  margin:
-    0 0 16px;
-
-  color:
-    #8f9ab5;
-
-  font-size:
-    10px;
-
-  font-weight:
-    700;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    .15em;
+  margin: 0 0 16px;
+  color: #8f9ab5;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .15em;
 }
 
 .carousel-heading h2 {
   margin: 0;
-
-  color:
-    #fff;
-
+  color: #fff;
   font:
     400
-    clamp(
-      45px,
-      5vw,
-      76px
-    )
-    /
-    .88
+    clamp(45px, 5vw, 76px)
+    /.88
     Georgia,
     serif;
-
-  letter-spacing:
-    -.06em;
+  letter-spacing: -.06em;
 }
 
 .carousel-controls {
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    12px;
-
-  font-size:
-    12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
 }
 
 .carousel-controls button {
-  width:
-    39px;
-
-  height:
-    39px;
-
-  border:
-    1px solid
-    #66708c;
-
-  border-radius:
-    50%;
-
-  background:
-    transparent;
-
-  color:
-    #fff;
-
-  font-size:
-    18px;
+  width: 39px;
+  height: 39px;
+  border: 1px solid #66708c;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  font-size: 18px;
 }
 
-.carousel-controls
-button:hover {
-  background:
-    #fff;
-
-  color:
-    #0b1020;
+.carousel-controls button:hover {
+  background: #fff;
+  color: #0b1020;
 }
 
 .carousel-track {
-  display:
-    grid;
-
+  display: grid;
   grid-template-columns:
-    repeat(
-      3,
-      1fr
-    );
-
-  gap:
-    15px;
+    repeat(3, 1fr);
+  gap: 15px;
 }
 
 .pick-card {
-  min-height:
-    355px;
+  min-height: 355px;
+  padding: 17px;
 
-  padding:
-    17px;
+  display: flex;
+  flex-direction: column;
 
-  display:
-    flex;
+  position: relative;
+  overflow: hidden;
 
-  flex-direction:
-    column;
-
-  position:
-    relative;
-
-  overflow:
-    hidden;
-
-  border-radius:
-    18px;
-
-  color:
-    #fff;
+  border-radius: 18px;
+  color: #fff;
 }
 
 .pick-pokemon {
@@ -1458,290 +881,161 @@ button:hover {
 }
 
 .pick-art {
-  height:
-    205px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .55
-    );
-
+  height: 205px;
+  border: 1px solid
+    rgba(255,255,255,.55);
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .09
-    );
+    rgba(255,255,255,.09);
 
-  position:
-    relative;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  overflow:
-    hidden;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
 .pick-art span {
-  position:
-    relative;
+  position: relative;
+  z-index: 2;
 
-  z-index:
-    2;
-
-  font-size:
-    11px;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    .11em;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .11em;
 }
 
 .pick-art i {
-  position:
-    absolute;
-
-  width:
-    42%;
-
-  aspect-ratio:
-    .7;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .7
-    );
-
-  border-radius:
-    5px;
-
+  position: absolute;
+  width: 42%;
+  aspect-ratio: .7;
+  border: 1px solid
+    rgba(255,255,255,.7);
+  border-radius: 5px;
   transform:
     rotate(16deg)
-    translate(
-      36px,
-      22px
-    );
-
+    translate(36px, 22px);
   background:
-    rgba(
-      255,
-      255,
-      255,
-      .12
-    );
+    rgba(255,255,255,.12);
 }
 
 .pick-art i + i {
   transform:
     rotate(-12deg)
-    translate(
-      -22px,
-      20px
-    );
+    translate(-22px, 20px);
 }
 
 .pick-card > p {
-  margin:
-    18px 0 8px;
-
-  font-size:
-    10px;
-
-  text-transform:
-    uppercase;
-
-  letter-spacing:
-    .12em;
-
-  opacity:
-    .78;
+  margin: 18px 0 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  opacity: .78;
 }
 
 .pick-card h3 {
-  margin:
-    0;
-
+  margin: 0;
   font:
-    400
-    30px
-    /
-    .95
-    Georgia,
+    400 30px/.95 Georgia,
     serif;
-
-  letter-spacing:
-    -.045em;
+  letter-spacing: -.045em;
 }
 
 .pick-card footer {
-  margin-top:
-    auto;
+  margin-top: auto;
+  padding-top: 13px;
 
-  padding-top:
-    13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
 
-  display:
-    flex;
+  border-top: 1px solid
+    rgba(255,255,255,.36);
 
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  gap:
-    15px;
-
-  border-top:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .36
-    );
-
-  font-size:
-    12px;
+  font-size: 12px;
 }
 
 .pick-card footer a {
-  color:
-    #fff;
-
-  text-decoration:
-    none;
+  color: #fff;
+  text-decoration: none;
 }
 
-
-/* =========================================
+/* ==========================
    RESPONSIVE
-========================================= */
+========================== */
 
-@media(
-  max-width: 1050px
-) {
+@media (max-width: 1100px) {
   .home-intro {
-    grid-template-columns:
-      1fr;
-
-    min-height:
-      auto;
-  }
-
-  .hero-showcase {
-    min-height:
-      auto;
+    min-height: auto;
+    grid-template-columns: 1fr;
+    padding-top: 115px;
   }
 }
 
-@media(
-  max-width: 850px
-) {
+@media (max-width: 850px) {
   .game-links,
   .carousel-track {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .stage-bottom {
+    grid-template-columns: 1fr;
   }
 
   .game-link {
-    min-height:
-      330px;
+    min-height: 330px;
   }
 
-  .carousel-track
-  .pick-card:nth-child(3) {
-    display:
-      none;
+  .carousel-track .pick-card:nth-child(3) {
+    display: none;
   }
 
   .carousel-heading {
-    align-items:
-      flex-start;
-
-    flex-direction:
-      column;
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
-@media(
-  max-width: 600px
-) {
+@media (max-width: 600px) {
   .home-intro {
     padding:
-      60px
-      20px;
+      105px 20px 55px;
   }
 
   .home-intro h1 {
-    font-size:
-      69px;
+    font-size: 68px;
   }
 
-  .hero-showcase {
+  .stage-feature {
+    padding: 22px;
+  }
+
+  .stage-bottom {
     padding:
-      22px;
-
-    border-radius:
-      24px;
-  }
-
-  .showcase-footer {
-    grid-template-columns:
-      1fr;
+      0 22px 22px;
   }
 
   .home-transition {
-    align-items:
-      flex-start;
-
-    flex-direction:
-      column;
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 `;
 
 export default function Home() {
-  const [
-    start,
-    setStart,
-  ] = useState(0);
+  const [start, setStart] =
+    useState(0);
 
-  const [
-    intro,
-    setIntro,
-  ] = useState("");
+  const [intro, setIntro] =
+    useState("");
 
-  const [
-    covers,
-    setCovers,
-  ] =
-    useState<MediaMap>(
-      {}
-    );
+  const [covers, setCovers] =
+    useState<MediaMap>({});
 
-  const [
-    logos,
-    setLogos,
-  ] =
-    useState<MediaMap>(
-      {}
-    );
+  const [logos, setLogos] =
+    useState<MediaMap>({});
 
   useEffect(() => {
     setIntro(
@@ -1762,36 +1056,26 @@ export default function Home() {
     const createMap = (
       rows:
         | {
-            tcg:
-              string;
-
-            storage_path:
-              string;
+            tcg: string;
+            storage_path: string;
           }[]
         | null
     ) => {
-      const next:
-        MediaMap = {};
+      const next: MediaMap =
+        {};
 
-      for (
-        const row of
-        rows ?? []
-      ) {
+      for (const row of rows ?? []) {
         if (
           ![
             "pokemon",
             "riftbound",
             "yugioh",
-          ].includes(
-            row.tcg
-          )
+          ].includes(row.tcg)
         ) {
           continue;
         }
 
-        const {
-          data,
-        } =
+        const { data } =
           client.storage
             .from(
               "catalog-images"
@@ -1802,8 +1086,7 @@ export default function Home() {
 
         next[
           row.tcg as TcgSlug
-        ] =
-          data.publicUrl;
+        ] = data.publicUrl;
       }
 
       return next;
@@ -1823,11 +1106,8 @@ export default function Home() {
               .select(
                 "tcg,storage_path"
               ),
-
             client
-              .from(
-                "tcg_logos"
-              )
+              .from("tcg_logos")
               .select(
                 "tcg,storage_path"
               ),
@@ -1873,10 +1153,7 @@ export default function Home() {
         () => {
           setStart(
             (current) =>
-              (
-                current +
-                1
-              ) %
+              (current + 1) %
               picks.length
           );
         },
@@ -1893,10 +1170,7 @@ export default function Home() {
     [0, 1, 2].map(
       (offset) =>
         picks[
-          (
-            start +
-            offset
-          ) %
+          (start + offset) %
             picks.length
         ]
     );
@@ -1912,22 +1186,17 @@ export default function Home() {
           variant="light"
         />
 
-        {/* =================================
-            HERO
-        ================================= */}
-
         <section className="home-intro">
           <div className="home-intro-copy">
             <p className="home-kicker">
               Cartas
-              coleccionables
-              · México
+              coleccionables ·
+              México
             </p>
 
             <h1>
               Elige tu
               <br />
-
               <i>
                 universo.
               </i>
@@ -1935,7 +1204,7 @@ export default function Home() {
 
             <p className="home-intro-message">
               {intro ||
-                "Encuentra cartas, expansiones y coleccionables de tus TCG favoritos en un solo lugar."}
+                "Encuentra cartas, expansiones y coleccionables de tus TCG favoritos en un solo lugar con una experiencia más clara, rápida y visual."}
             </p>
 
             <div className="hero-actions">
@@ -1945,7 +1214,6 @@ export default function Home() {
               >
                 Explorar
                 catálogos
-
                 <span>
                   ↓
                 </span>
@@ -1955,115 +1223,147 @@ export default function Home() {
                 className="hero-secondary"
                 href="/pokemon"
               >
-                Ver Pokémon
-                ↗
+                Ver Pokémon ↗
               </Link>
+            </div>
+
+            <div className="hero-meta">
+              <div className="hero-meta-card">
+                <b>
+                  Productos
+                </b>
+                <span>
+                  Sellado,
+                  individuales y
+                  accesorios.
+                </span>
+              </div>
+
+              <div className="hero-meta-card">
+                <b>
+                  Catálogos
+                </b>
+                <span>
+                  Pokémon,
+                  Riftbound y
+                  Yu-Gi-Oh!
+                </span>
+              </div>
+
+              <div className="hero-meta-card">
+                <b>
+                  Pokeamigos
+                </b>
+                <span>
+                  Un solo lugar
+                  para explorar
+                  todo.
+                </span>
+              </div>
             </div>
           </div>
 
-          <aside className="hero-showcase">
-            <div className="showcase-heading">
-              <small>
-                POKEAMIGOS
-              </small>
+          <div className="hero-stage">
+            <section className="stage-panel">
+              <div className="stage-feature">
+                <small>
+                  POKEAMIGOS
+                </small>
 
-              <h2>
-                Tres juegos.
-                <br />
-                Una sola
-                colección.
-              </h2>
-            </div>
+                <h2>
+                  Explora los
+                  universos que
+                  más te gustan.
+                </h2>
 
-            <div className="hero-universes">
-              {games.map(
-                (
-                  game,
-                  index
-                ) => (
-                  <Link
-                    className="hero-universe"
-                    href={
-                      game.href
-                    }
-                    key={
-                      game.slug
-                    }
-                  >
-                    <span className="universe-number">
-                      {String(
-                        index +
-                          1
-                      ).padStart(
-                        2,
-                        "0"
-                      )}
-                    </span>
-
-                    {logos[
-                      game.slug
-                    ] ? (
-                      <img
-                        className="hero-universe-logo"
-                        src={
-                          logos[
-                            game
-                              .slug
-                          ]
+                <div className="stage-list">
+                  {games.map(
+                    (
+                      game,
+                      index
+                    ) => (
+                      <Link
+                        className="stage-link"
+                        href={
+                          game.href
                         }
-                        alt={`Logo ${game.name}`}
-                      />
-                    ) : (
-                      <span className="universe-fallback">
-                        {
-                          game.name
+                        key={
+                          game.slug
                         }
-                      </span>
-                    )}
+                      >
+                        <span className="stage-num">
+                          {String(
+                            index + 1
+                          ).padStart(
+                            2,
+                            "0"
+                          )}
+                        </span>
 
-                    <b>
-                      ↗
-                    </b>
-                  </Link>
-                )
-              )}
-            </div>
+                        {logos[
+                          game.slug
+                        ] ? (
+                          <img
+                            className="stage-logo"
+                            src={
+                              logos[
+                                game
+                                  .slug
+                              ]
+                            }
+                            alt={`Logo ${game.name}`}
+                          />
+                        ) : (
+                          <span className="stage-fallback">
+                            {
+                              game.name
+                            }
+                          </span>
+                        )}
 
-            <div className="showcase-footer">
-              <div>
-                <b>
-                  Colecciona
-                </b>
-
-                <span>
-                  Tus cartas
-                  favoritas
-                </span>
+                        <span className="stage-arrow">
+                          ↗
+                        </span>
+                      </Link>
+                    )
+                  )}
+                </div>
               </div>
 
-              <div>
-                <b>
-                  Construye
-                </b>
+              <div className="stage-bottom">
+                <div className="stage-chip">
+                  <b>
+                    Colecciona
+                  </b>
+                  <span>
+                    Cartas y
+                    productos
+                    favoritos.
+                  </span>
+                </div>
 
-                <span>
-                  Tu siguiente
-                  mazo
-                </span>
+                <div className="stage-chip">
+                  <b>
+                    Construye
+                  </b>
+                  <span>
+                    Tu siguiente
+                    mazo y estrategia.
+                  </span>
+                </div>
+
+                <div className="stage-chip">
+                  <b>
+                    Descubre
+                  </b>
+                  <span>
+                    Lanzamientos y
+                    novedades.
+                  </span>
+                </div>
               </div>
-
-              <div>
-                <b>
-                  Descubre
-                </b>
-
-                <span>
-                  Nuevos
-                  lanzamientos
-                </span>
-              </div>
-            </div>
-          </aside>
+            </section>
+          </div>
         </section>
 
         <div className="home-transition">
@@ -2076,10 +1376,6 @@ export default function Home() {
             · Yu-Gi-Oh!
           </span>
         </div>
-
-        {/* =================================
-            TCG
-        ================================= */}
 
         <section
           className="game-links"
@@ -2132,12 +1428,18 @@ export default function Home() {
                   </b>
 
                   <span>
-                    Ir al
-                    catálogo ↗
+                    Ir al catálogo
+                    ↗
                   </span>
                 </div>
 
                 <div>
+                  <span className="game-chip">
+                    {
+                      game.chip
+                    }
+                  </span>
+
                   {logos[
                     game.slug
                   ] ? (
@@ -2145,8 +1447,7 @@ export default function Home() {
                       className="game-card-logo"
                       src={
                         logos[
-                          game
-                            .slug
+                          game.slug
                         ]
                       }
                       alt={`Logo ${game.name}`}
@@ -2170,10 +1471,6 @@ export default function Home() {
           )}
         </section>
 
-        {/* =================================
-            DESTACADOS
-        ================================= */}
-
         <section className="home-carousel">
           <div className="carousel-heading">
             <div>
@@ -2184,7 +1481,6 @@ export default function Home() {
               <h2>
                 Lo que todos
                 <br />
-
                 quieren abrir.
               </h2>
             </div>
@@ -2214,9 +1510,7 @@ export default function Home() {
                   2,
                   "0"
                 )}
-
                 {" / "}
-
                 {String(
                   picks.length
                 ).padStart(
@@ -2230,15 +1524,13 @@ export default function Home() {
                 aria-label="Siguiente"
                 onClick={() =>
                   setStart(
-                    (
-                      start +
-                      1
-                    ) %
+                    (start + 1) %
                       picks.length
                   )
                 }
               >
                 →
+
               </button>
             </div>
           </div>
@@ -2258,28 +1550,21 @@ export default function Home() {
                       Producto
                       destacado
                     </span>
-
                     <i />
                     <i />
                   </div>
 
                   <p>
-                    {
-                      pick.tag
-                    }
+                    {pick.tag}
                   </p>
 
                   <h3>
-                    {
-                      pick.name
-                    }
+                    {pick.name}
                   </h3>
 
                   <footer>
                     <span>
-                      {
-                        pick.game
-                      }
+                      {pick.game}
                     </span>
 
                     <Link
@@ -2287,8 +1572,8 @@ export default function Home() {
                         pick.href
                       }
                     >
-                      Ver
-                      catálogo ↗
+                      Ver catálogo
+                      ↗
                     </Link>
                   </footer>
                 </article>
