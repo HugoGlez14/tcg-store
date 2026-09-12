@@ -18,6 +18,10 @@ import {
   ProductManager,
 } from "@/components/admin-product-manager";
 
+import {
+  AdminMediaManager,
+} from "@/components/admin-media-manager";
+
 const tabs = [
   "Resumen",
   "Productos",
@@ -30,9 +34,18 @@ const tabs = [
 
 type UserProfile = {
   id: string;
-  email: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
+
+  email:
+    | string
+    | null;
+
+  full_name:
+    | string
+    | null;
+
+  avatar_url:
+    | string
+    | null;
 
   role:
     | "admin"
@@ -41,38 +54,13 @@ type UserProfile = {
   created_at: string;
 };
 
-type CoverInfo = {
-  path: string;
-  url: string;
-};
-
-type CoverMap =
-  Record<string, CoverInfo>;
-
-type CoverTarget =
-  | "home"
-  | "catalog";
-
-const coverOptions = [
-  {
-    slug: "pokemon",
-    name: "Pokémon",
-  },
-  {
-    slug: "riftbound",
-    name: "Riftbound",
-  },
-  {
-    slug: "yugioh",
-    name: "Yu-Gi-Oh!",
-  },
-];
-
 export default function AdminPage() {
   const [
     tab,
     setTab,
-  ] = useState("Resumen");
+  ] = useState(
+    "Resumen"
+  );
 
   const [
     saved,
@@ -114,7 +102,8 @@ export default function AdminPage() {
       return;
     }
 
-    const client = supabase;
+    const client =
+      supabase;
 
     const checkAccess =
       async () => {
@@ -139,16 +128,21 @@ export default function AdminPage() {
           data: profile,
           error:
             profileError,
-        } = await client
-          .from("profiles")
-          .select("role")
-          .eq(
-            "id",
-            data.user.id
-          )
-          .maybeSingle();
+        } =
+          await client
+            .from(
+              "profiles"
+            )
+            .select("role")
+            .eq(
+              "id",
+              data.user.id
+            )
+            .maybeSingle();
 
-        if (profileError) {
+        if (
+          profileError
+        ) {
           console.error(
             "Error consultando perfil:",
             profileError
@@ -172,7 +166,8 @@ export default function AdminPage() {
     checkAccess();
 
     const {
-      data: listener,
+      data:
+        authListener,
     } =
       client.auth.onAuthStateChange(
         () => {
@@ -181,7 +176,9 @@ export default function AdminPage() {
       );
 
     return () => {
-      listener.subscription.unsubscribe();
+      authListener
+        .subscription
+        .unsubscribe();
     };
   }, []);
 
@@ -195,37 +192,44 @@ export default function AdminPage() {
     }, 2500);
   };
 
-  const signIn = async (
-    event: React.FormEvent
-  ) => {
-    event.preventDefault();
+  const signIn =
+    async (
+      event:
+        React.FormEvent
+    ) => {
+      event.preventDefault();
 
-    if (!supabase) return;
+      if (!supabase) {
+        return;
+      }
 
-    const {
-      error,
-    } =
-      await supabase.auth.signInWithPassword(
-        {
-          email,
-          password,
-        }
+      const {
+        error,
+      } =
+        await supabase.auth.signInWithPassword(
+          {
+            email,
+            password,
+          }
+        );
+
+      setAccessMessage(
+        error
+          ? error.message
+          : "Acceso correcto."
       );
-
-    setAccessMessage(
-      error
-        ? error.message
-        : "Acceso correcto."
-    );
-  };
+    };
 
   const google =
     async () => {
-      if (!supabase) return;
+      if (!supabase) {
+        return;
+      }
 
       await supabase.auth.signInWithOAuth(
         {
-          provider: "google",
+          provider:
+            "google",
 
           options: {
             redirectTo:
@@ -281,7 +285,7 @@ export default function AdminPage() {
                 <span>
                   Solo cuentas
                   autorizadas pueden
-                  editar la tienda.
+                  entrar al panel.
                 </span>
 
                 <form
@@ -343,6 +347,7 @@ export default function AdminPage() {
 
                 <button
                   className="secondary"
+                  type="button"
                   onClick={
                     google
                   }
@@ -370,8 +375,8 @@ export default function AdminPage() {
                 </h1>
 
                 <span>
-                  Esta cuenta no
-                  tiene rol de
+                  Tu cuenta no tiene
+                  rol de
                   administrador.
                 </span>
               </>
@@ -411,12 +416,12 @@ export default function AdminPage() {
             (item) => (
               <button
                 type="button"
+                key={item}
                 className={
                   tab === item
                     ? "selected"
                     : ""
                 }
-                key={item}
                 onClick={() =>
                   setTab(
                     item
@@ -488,14 +493,7 @@ export default function AdminPage() {
 
         {tab ===
           "Imágenes" && (
-          <ImageManager
-            save={save}
-          />
-        )}
-
-        {tab ===
-          "Pagos" && (
-          <Payments
+          <AdminMediaManager
             save={save}
           />
         )}
@@ -503,6 +501,13 @@ export default function AdminPage() {
         {tab ===
           "Pedidos" && (
           <Orders />
+        )}
+
+        {tab ===
+          "Pagos" && (
+          <Payments
+            save={save}
+          />
         )}
 
         {tab ===
@@ -522,16 +527,11 @@ export default function AdminPage() {
   );
 }
 
-
-/* =========================================
-   RESUMEN
-========================================= */
-
 function Overview({
   setTab,
 }: {
   setTab: (
-    tab: string
+    value: string
   ) => void;
 }) {
   return (
@@ -617,7 +617,7 @@ function Overview({
               }
             >
               ▣ Cambiar
-              portadas
+              portadas y logos
             </button>
 
             <button
@@ -628,8 +628,7 @@ function Overview({
                 )
               }
             >
-              ⚙ Ajustes de
-              tienda
+              ⚙ Ajustes de tienda
             </button>
           </div>
         </article>
@@ -671,11 +670,6 @@ function Overview({
   );
 }
 
-
-/* =========================================
-   USUARIOS
-========================================= */
-
 function Users() {
   const [
     users,
@@ -708,7 +702,8 @@ function Users() {
       return;
     }
 
-    const client = supabase;
+    const client =
+      supabase;
 
     const loadUsers =
       async () => {
@@ -736,7 +731,6 @@ function Users() {
           queryError
         ) {
           console.error(
-            "Error cargando usuarios:",
             queryError
           );
 
@@ -767,8 +761,7 @@ function Users() {
       <div className="card-heading">
         <div>
           <p>
-            Clientes
-            registrados
+            Clientes registrados
           </p>
 
           <h2>
@@ -790,9 +783,6 @@ function Users() {
       {!loading &&
         error && (
           <p className="users-error">
-            No se pudieron
-            cargar los
-            usuarios:{" "}
             {error}
           </p>
         )}
@@ -803,8 +793,7 @@ function Users() {
           0 && (
           <p className="users-message">
             Todavía no hay
-            usuarios
-            registrados.
+            usuarios registrados.
           </p>
         )}
 
@@ -833,22 +822,21 @@ function Users() {
 
             {users.map(
               (user) => {
-                const
-                  displayName =
-                    user.full_name ||
-                    user.email?.split(
+                const name =
+                  user.full_name ||
+                  user.email
+                    ?.split(
                       "@"
                     )[0] ||
-                    "Sin nombre";
+                  "Sin nombre";
 
-                const
-                  initial =
-                    displayName
-                      .slice(
-                        0,
-                        1
-                      )
-                      .toUpperCase();
+                const initial =
+                  name
+                    .slice(
+                      0,
+                      1
+                    )
+                    .toUpperCase();
 
                 return (
                   <div
@@ -875,9 +863,7 @@ function Users() {
                       )}
 
                       <b>
-                        {
-                          displayName
-                        }
+                        {name}
                       </b>
                     </div>
 
@@ -917,749 +903,11 @@ function Users() {
   );
 }
 
-
-/* =========================================
-   IMÁGENES
-========================================= */
-
-function ImageManager({
-  save,
-}: {
-  save: (
-    message: string
-  ) => void;
-}) {
-  const [
-    homeCovers,
-    setHomeCovers,
-  ] =
-    useState<CoverMap>({});
-
-  const [
-    catalogCovers,
-    setCatalogCovers,
-  ] =
-    useState<CoverMap>({});
-
-  const [
-    loading,
-    setLoading,
-  ] =
-    useState(true);
-
-  const [
-    uploading,
-    setUploading,
-  ] =
-    useState("");
-
-  /*
-   * Cargar todas las
-   * portadas desde Supabase.
-   */
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
-    const client = supabase;
-
-    const buildMap = (
-      rows:
-        | {
-            tcg: string;
-            storage_path:
-              string;
-          }[]
-        | null
-    ) => {
-      const map:
-        CoverMap = {};
-
-      for (
-        const row of
-        rows ?? []
-      ) {
-        const {
-          data,
-        } =
-          client.storage
-            .from(
-              "catalog-images"
-            )
-            .getPublicUrl(
-              row.storage_path
-            );
-
-        map[row.tcg] = {
-          path:
-            row.storage_path,
-
-          url:
-            data.publicUrl,
-        };
-      }
-
-      return map;
-    };
-
-    const loadCovers =
-      async () => {
-        const [
-          homeResult,
-          catalogResult,
-        ] =
-          await Promise.all([
-            client
-              .from(
-                "home_covers"
-              )
-              .select(
-                "tcg,storage_path"
-              ),
-
-            client
-              .from(
-                "catalog_covers"
-              )
-              .select(
-                "tcg,storage_path"
-              ),
-          ]);
-
-        if (
-          homeResult.error
-        ) {
-          console.error(
-            "Error cargando portadas de inicio:",
-            homeResult.error
-          );
-        }
-
-        if (
-          catalogResult.error
-        ) {
-          console.error(
-            "Error cargando portadas internas:",
-            catalogResult.error
-          );
-        }
-
-        setHomeCovers(
-          buildMap(
-            homeResult.data
-          )
-        );
-
-        setCatalogCovers(
-          buildMap(
-            catalogResult.data
-          )
-        );
-
-        setLoading(false);
-      };
-
-    loadCovers();
-  }, []);
-
-  /*
-   * Subir o reemplazar
-   * una portada.
-   */
-  const uploadCover =
-    async (
-      target:
-        CoverTarget,
-      slug: string,
-      name: string,
-      file?: File
-    ) => {
-      if (
-        !file ||
-        !supabase
-      ) {
-        return;
-      }
-
-      if (
-        ![
-          "image/jpeg",
-          "image/png",
-          "image/webp",
-        ].includes(
-          file.type
-        )
-      ) {
-        save(
-          "Solo se permiten JPG, PNG o WebP"
-        );
-
-        return;
-      }
-
-      if (
-        file.size >
-        5 *
-          1024 *
-          1024
-      ) {
-        save(
-          "La imagen debe pesar menos de 5 MB"
-        );
-
-        return;
-      }
-
-      const client =
-        supabase;
-
-      const
-        uploadingId =
-          `${target}-${slug}`;
-
-      setUploading(
-        uploadingId
-      );
-
-      const extension =
-        file.name
-          .split(".")
-          .pop()
-          ?.toLowerCase()
-          .replace(
-            /[^a-z0-9]/g,
-            ""
-          ) ||
-        "jpg";
-
-      const folder =
-        target ===
-        "home"
-          ? "home"
-          : "catalog";
-
-      const storagePath =
-        `${folder}/${slug}-${Date.now()}.${extension}`;
-
-      const current =
-        target ===
-        "home"
-          ? homeCovers[
-              slug
-            ]
-          : catalogCovers[
-              slug
-            ];
-
-      try {
-        const {
-          error:
-            uploadError,
-        } =
-          await client.storage
-            .from(
-              "catalog-images"
-            )
-            .upload(
-              storagePath,
-              file,
-              {
-                cacheControl:
-                  "3600",
-
-                upsert:
-                  false,
-
-                contentType:
-                  file.type,
-              }
-            );
-
-        if (
-          uploadError
-        ) {
-          throw uploadError;
-        }
-
-        const table =
-          target ===
-          "home"
-            ? "home_covers"
-            : "catalog_covers";
-
-        const {
-          error: dbError,
-        } =
-          await client
-            .from(table)
-            .upsert(
-              {
-                tcg: slug,
-
-                storage_path:
-                  storagePath,
-
-                alt_text:
-                  `Portada ${name}`,
-
-                updated_at:
-                  new Date()
-                    .toISOString(),
-              },
-              {
-                onConflict:
-                  "tcg",
-              }
-            );
-
-        if (dbError) {
-          await client.storage
-            .from(
-              "catalog-images"
-            )
-            .remove([
-              storagePath,
-            ]);
-
-          throw dbError;
-        }
-
-        /*
-         * Ya que la nueva
-         * quedó guardada,
-         * eliminamos la
-         * anterior.
-         */
-        if (
-          current?.path &&
-          current.path !==
-            storagePath
-        ) {
-          await client.storage
-            .from(
-              "catalog-images"
-            )
-            .remove([
-              current.path,
-            ]);
-        }
-
-        const {
-          data:
-            publicData,
-        } =
-          client.storage
-            .from(
-              "catalog-images"
-            )
-            .getPublicUrl(
-              storagePath
-            );
-
-        const newCover = {
-          path:
-            storagePath,
-
-          url:
-            publicData.publicUrl,
-        };
-
-        if (
-          target ===
-          "home"
-        ) {
-          setHomeCovers(
-            (
-              previous
-            ) => ({
-              ...previous,
-
-              [slug]:
-                newCover,
-            })
-          );
-        } else {
-          setCatalogCovers(
-            (
-              previous
-            ) => ({
-              ...previous,
-
-              [slug]:
-                newCover,
-            })
-          );
-        }
-
-        save(
-          target ===
-            "home"
-            ? `Portada de ${name} en inicio actualizada`
-            : `Portada interna de ${name} actualizada`
-        );
-      } catch (
-        error
-      ) {
-        console.error(
-          "Error subiendo portada:",
-          error
-        );
-
-        save(
-          "No se pudo guardar la portada"
-        );
-      } finally {
-        setUploading("");
-      }
-    };
-
-  /*
-   * Eliminar portada.
-   */
-  const removeCover =
-    async (
-      target:
-        CoverTarget,
-      slug: string
-    ) => {
-      if (!supabase) {
-        return;
-      }
-
-      const client =
-        supabase;
-
-      const covers =
-        target ===
-        "home"
-          ? homeCovers
-          : catalogCovers;
-
-      const current =
-        covers[slug];
-
-      const table =
-        target ===
-        "home"
-          ? "home_covers"
-          : "catalog_covers";
-
-      const {
-        error,
-      } = await client
-        .from(table)
-        .delete()
-        .eq(
-          "tcg",
-          slug
-        );
-
-      if (error) {
-        console.error(
-          error
-        );
-
-        save(
-          "No se pudo eliminar la portada"
-        );
-
-        return;
-      }
-
-      if (
-        current?.path
-      ) {
-        await client.storage
-          .from(
-            "catalog-images"
-          )
-          .remove([
-            current.path,
-          ]);
-      }
-
-      if (
-        target ===
-        "home"
-      ) {
-        setHomeCovers(
-          (
-            previous
-          ) => {
-            const next = {
-              ...previous,
-            };
-
-            delete next[
-              slug
-            ];
-
-            return next;
-          }
-        );
-      } else {
-        setCatalogCovers(
-          (
-            previous
-          ) => {
-            const next = {
-              ...previous,
-            };
-
-            delete next[
-              slug
-            ];
-
-            return next;
-          }
-        );
-      }
-
-      save(
-        "Portada eliminada"
-      );
-    };
-
-  /*
-   * Tarjetas reutilizables.
-   */
-  const renderCovers = (
-    target:
-      CoverTarget,
-    covers:
-      CoverMap
-  ) => (
-    <div className="cover-grid">
-      {coverOptions.map(
-        (cover) => {
-          const image =
-            covers[
-              cover.slug
-            ];
-
-          const isUploading =
-            uploading ===
-            `${target}-${cover.slug}`;
-
-          return (
-            <article
-              className="cover-card"
-              key={`${target}-${cover.slug}`}
-            >
-              <div
-                className={`cover-preview ${
-                  image
-                    ? "has-image"
-                    : ""
-                }`}
-                style={
-                  image
-                    ? {
-                        backgroundImage:
-                          `url("${image.url}")`,
-                      }
-                    : undefined
-                }
-              >
-                <span>
-                  {image
-                    ? "Portada cargada"
-                    : cover.name}
-                </span>
-              </div>
-
-              <div>
-                <h3>
-                  {
-                    cover.name
-                  }
-                </h3>
-
-                <p>
-                  {target ===
-                  "home"
-                    ? "Tarjeta que aparece en la página principal."
-                    : `Banner que aparece dentro de ${cover.name}.`}
-                </p>
-              </div>
-
-              <label className="cover-upload">
-                {isUploading
-                  ? "Subiendo…"
-                  : image
-                    ? "Cambiar portada"
-                    : "Subir portada"}
-
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  disabled={
-                    isUploading
-                  }
-                  onChange={(
-                    event
-                  ) => {
-                    const file =
-                      event
-                        .target
-                        .files?.[0];
-
-                    uploadCover(
-                      target,
-                      cover.slug,
-                      cover.name,
-                      file
-                    );
-
-                    event.target.value =
-                      "";
-                  }}
-                />
-              </label>
-
-              {image && (
-                <button
-                  className="mini-delete"
-                  type="button"
-                  onClick={() =>
-                    removeCover(
-                      target,
-                      cover.slug
-                    )
-                  }
-                >
-                  Quitar imagen
-                </button>
-              )}
-            </article>
-          );
-        }
-      )}
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <section className="admin-card">
-        <p>
-          Biblioteca visual
-        </p>
-
-        <h2>
-          Cargando portadas…
-        </h2>
-      </section>
-    );
-  }
-
-  return (
-    <section className="image-manager">
-      {/* ======================
-          PÁGINA PRINCIPAL
-      ====================== */}
-
-      <div className="payment-intro">
-        <div>
-          <p>
-            Página principal
-          </p>
-
-          <h2>
-            Portadas de inicio.
-          </h2>
-
-          <span>
-            Estas son las tres
-            tarjetas grandes de
-            Pokémon, Riftbound y
-            Yu-Gi-Oh! que aparecen
-            debajo de “Elige tu
-            universo”.
-          </span>
-        </div>
-
-        <b>
-          INICIO
-        </b>
-      </div>
-
-      {renderCovers(
-        "home",
-        homeCovers
-      )}
-
-      {/* ======================
-          PORTADAS INTERNAS
-      ====================== */}
-
-      <div
-        className="payment-intro"
-        style={{
-          marginTop: 65,
-        }}
-      >
-        <div>
-          <p>
-            Catálogos
-          </p>
-
-          <h2>
-            Portadas internas.
-          </h2>
-
-          <span>
-            Estas imágenes aparecen
-            cuando entras directamente
-            al catálogo de Pokémon,
-            Riftbound o Yu-Gi-Oh!.
-          </span>
-        </div>
-
-        <b>
-          CATÁLOGOS
-        </b>
-      </div>
-
-      {renderCovers(
-        "catalog",
-        catalogCovers
-      )}
-
-      <section
-        className="admin-card image-guidance"
-        style={{
-          marginTop: 30,
-        }}
-      >
-        <p>
-          Recomendación
-        </p>
-
-        <span>
-          Para las portadas de inicio
-          utiliza imágenes horizontales
-          y deja espacio libre en la
-          zona inferior izquierda,
-          porque ahí aparecerá el nombre
-          del juego y su descripción.
-        </span>
-      </section>
-    </section>
-  );
-}
-
-
-/* =========================================
-   PAGOS
-========================================= */
-
 function Payments({
   save,
 }: {
   save: (
-    message: string
+    value: string
   ) => void;
 }) {
   const methods = [
@@ -1668,19 +916,16 @@ function Payments({
       "Recomendado para México",
       "Tarjetas, SPEI y efectivo",
     ],
-
     [
       "Stripe",
       "Pagos con tarjeta",
       "Visa, Mastercard y AMEX",
     ],
-
     [
       "PayPal",
       "Pago desde cuenta",
       "Protección para compradores",
     ],
-
     [
       "Transferencia SPEI",
       "Pago manual",
@@ -1703,15 +948,13 @@ function Payments({
 
           <span>
             Conecta solamente
-            los métodos que
-            utilizarás en tu
-            tienda.
+            los métodos que usarás
+            en tu tienda.
           </span>
         </div>
 
         <b>
-          Entorno de
-          preparación
+          PREPARACIÓN
         </b>
       </div>
 
@@ -1726,8 +969,8 @@ function Payments({
             index
           ) => (
             <article
-              key={name}
               className="payment-card"
+              key={name}
             >
               <div className="payment-logo">
                 {name
@@ -1744,15 +987,11 @@ function Payments({
                 </h3>
 
                 <p>
-                  {
-                    subtitle
-                  }
+                  {subtitle}
                 </p>
 
                 <small>
-                  {
-                    detail
-                  }
+                  {detail}
                 </small>
               </div>
 
@@ -1782,11 +1021,6 @@ function Payments({
   );
 }
 
-
-/* =========================================
-   PEDIDOS
-========================================= */
-
 function Orders() {
   return (
     <section className="admin-card orders">
@@ -1797,8 +1031,7 @@ function Orders() {
           </p>
 
           <h2>
-            Revisión de
-            pedidos
+            Revisión de pedidos
           </h2>
         </div>
 
@@ -1871,23 +1104,17 @@ function Orders() {
   );
 }
 
-
-/* =========================================
-   AJUSTES
-========================================= */
-
 function Settings({
   save,
 }: {
   save: (
-    message: string
+    value: string
   ) => void;
 }) {
   const [
     homeIntro,
     setHomeIntro,
-  ] =
-    useState("");
+  ] = useState("");
 
   useEffect(() => {
     setHomeIntro(
@@ -1897,19 +1124,16 @@ function Settings({
     );
   }, []);
 
-  const saveHomeIntro =
-    () => {
-      localStorage.setItem(
-        "tcg-home-intro",
-        homeIntro.trim()
-      );
+  const saveIntro = () => {
+    localStorage.setItem(
+      "tcg-home-intro",
+      homeIntro.trim()
+    );
 
-      save(
-        homeIntro.trim()
-          ? "Texto de inicio actualizado"
-          : "Texto de inicio eliminado"
-      );
-    };
+    save(
+      "Texto de inicio actualizado"
+    );
+  };
 
   return (
     <section className="settings">
@@ -1922,7 +1146,7 @@ function Settings({
           Nombre visible
 
           <input
-            placeholder="Pendiente de definir"
+            placeholder="TCG Store"
           />
         </label>
 
@@ -1940,7 +1164,7 @@ function Settings({
           type="button"
           onClick={() =>
             save(
-              "Datos de tienda guardados"
+              "Datos guardados"
             )
           }
         >
@@ -1950,15 +1174,8 @@ function Settings({
 
       <article className="admin-card">
         <p>
-          Texto de la página
-          principal
+          Página principal
         </p>
-
-        <span>
-          Agrega una frase breve
-          debajo de “Elige tu
-          universo”.
-        </span>
 
         <label>
           Mensaje de bienvenida
@@ -1971,15 +1188,12 @@ function Settings({
               event
             ) =>
               setHomeIntro(
-                event
-                  .target
+                event.target
                   .value
               )
             }
-            placeholder="Ej. Cartas, comunidad y grandes hallazgos."
-            maxLength={
-              120
-            }
+            maxLength={120}
+            placeholder="Cartas, comunidad y grandes hallazgos."
           />
         </label>
 
@@ -1987,11 +1201,10 @@ function Settings({
           className="primary-action"
           type="button"
           onClick={
-            saveHomeIntro
+            saveIntro
           }
         >
           Guardar texto
-          de inicio
         </button>
       </article>
 
@@ -2001,18 +1214,16 @@ function Settings({
         </p>
 
         <span>
-          Configura zonas,
-          tarifas, tiempos
-          de entrega y
-          devoluciones.
+          Revisa la información
+          legal visible para tus
+          clientes.
         </span>
 
         <Link
           className="secondary"
           href="/politica-de-envios"
         >
-          Ver política de
-          envíos
+          Política de envíos
         </Link>
       </article>
     </section>

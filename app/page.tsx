@@ -1,17 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { AuthButton } from "@/components/auth-button";
-import { supabase } from "@/lib/supabase";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  AuthButton,
+} from "@/components/auth-button";
+
+import {
+  supabase,
+} from "@/lib/supabase";
 
 type TcgSlug =
   | "pokemon"
   | "riftbound"
   | "yugioh";
 
-type CoverMap =
-  Partial<Record<TcgSlug, string>>;
+type MediaMap =
+  Partial<
+    Record<
+      TcgSlug,
+      string
+    >
+  >;
 
 const games: {
   slug: TcgSlug;
@@ -78,44 +93,186 @@ const picks = [
 ];
 
 const styles = `
+.home-page {
+  background: #0b1020;
+}
+
+.home-page .shop-header {
+  background:
+    rgba(245,246,250,.97);
+}
+
+.home-intro {
+  background:
+    radial-gradient(
+      circle at 85% 20%,
+      #e5c4ff,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      #b8e9ff,
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #eef0ff,
+      #f5ebf4
+    );
+}
+
+.game-links {
+  background:
+    linear-gradient(
+      180deg,
+      #11172c,
+      #0c1223
+    );
+
+  padding-top:
+    clamp(
+      35px,
+      4vw,
+      65px
+    );
+
+  padding-bottom:
+    clamp(
+      55px,
+      6vw,
+      90px
+    );
+}
+
+.game-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.game-card-cover {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  object-position: center;
+
+  z-index: 0;
+
+  opacity: .74;
+}
+
+.game-link::after {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(5,8,18,.08),
+      rgba(5,8,18,.88)
+    );
+}
+
+.game-link > *:not(.game-card-cover) {
+  position: relative;
+  z-index: 2;
+}
+
+.game-card-logo {
+  display: block;
+
+  width:
+    min(
+      270px,
+      75%
+    );
+
+  max-height: 85px;
+
+  object-fit: contain;
+
+  object-position:
+    left center;
+
+  margin-bottom: 14px;
+
+  filter:
+    drop-shadow(
+      0 8px 16px
+      rgba(0,0,0,.35)
+    );
+}
+
 .home-carousel {
   padding:
     clamp(65px,8vw,115px)
     clamp(20px,7vw,112px);
 
-  background:#eef0f4;
+  background:
+    #11172a;
+
+  color: #f6f7fb;
 }
 
 .carousel-heading {
   display:flex;
+
   align-items:end;
-  justify-content:space-between;
+  justify-content:
+    space-between;
+
   margin-bottom:32px;
 }
 
 .carousel-heading p {
   font-size:10px;
-  text-transform:uppercase;
+
+  text-transform:
+    uppercase;
+
   letter-spacing:.15em;
+
   font-weight:700;
-  color:#66718a;
+
+  color:#8f9ab5;
+
   margin:0 0 16px;
 }
 
 .carousel-heading h2 {
   font:
-    400 clamp(45px,5vw,76px)/.88
+    400 clamp(
+      45px,
+      5vw,
+      76px
+    )/.88
     Georgia,
     serif;
 
   letter-spacing:-.06em;
+
   margin:0;
+
+  color: #fff;
 }
 
 .carousel-controls {
   display:flex;
+
   align-items:center;
+
   gap:12px;
+
   font-size:12px;
 }
 
@@ -124,20 +281,22 @@ const styles = `
   height:39px;
 
   border-radius:50%;
-  border:1px solid #aeb7c7;
 
-  background:transparent;
+  border:
+    1px solid
+    #66708c;
+
+  background:
+    transparent;
+
+  color: #fff;
 
   font-size:18px;
 }
 
-.carousel-controls button:hover {
-  background:#0b1020;
-  color:white;
-}
-
 .carousel-track {
   display:grid;
+
   grid-template-columns:
     repeat(3,1fr);
 
@@ -146,14 +305,20 @@ const styles = `
 
 .pick-card {
   color:white;
+
   padding:17px;
+
   min-height:355px;
 
   display:flex;
+
   flex-direction:column;
 
   position:relative;
+
   overflow:hidden;
+
+  border-radius: 18px;
 }
 
 .pick-pokemon {
@@ -196,6 +361,7 @@ const styles = `
   position:relative;
 
   display:grid;
+
   place-items:center;
 
   overflow:hidden;
@@ -204,10 +370,13 @@ const styles = `
 .pick-art span {
   font-size:11px;
 
-  text-transform:uppercase;
+  text-transform:
+    uppercase;
+
   letter-spacing:.11em;
 
   position:relative;
+
   z-index:2;
 }
 
@@ -215,6 +384,7 @@ const styles = `
   position:absolute;
 
   width:42%;
+
   aspect-ratio:.7;
 
   border:
@@ -225,27 +395,41 @@ const styles = `
 
   transform:
     rotate(16deg)
-    translate(36px,22px);
+    translate(
+      36px,
+      22px
+    );
 
   background:
-    rgba(255,255,255,.12);
+    rgba(
+      255,
+      255,
+      255,
+      .12
+    );
 }
 
 .pick-art i+i {
   transform:
     rotate(-12deg)
-    translate(-22px,20px);
+    translate(
+      -22px,
+      20px
+    );
 }
 
 .pick-card>p {
   font-size:10px;
 
-  text-transform:uppercase;
+  text-transform:
+    uppercase;
+
   letter-spacing:.12em;
 
   opacity:.78;
 
-  margin:18px 0 8px;
+  margin:
+    18px 0 8px;
 }
 
 .pick-card h3 {
@@ -254,7 +438,8 @@ const styles = `
     Georgia,
     serif;
 
-  letter-spacing:-.045em;
+  letter-spacing:
+    -.045em;
 
   margin:0;
 }
@@ -264,45 +449,49 @@ const styles = `
 
   border-top:
     1px solid
-    rgba(255,255,255,.36);
+    rgba(
+      255,
+      255,
+      255,
+      .36
+    );
 
   padding-top:13px;
 
   display:flex;
+
   align-items:center;
-  justify-content:space-between;
+
+  justify-content:
+    space-between;
 
   font-size:12px;
-}
-
-.pick-card footer button {
-  border:0;
-  background:transparent;
-  color:white;
-  font-size:12px;
-  padding:0;
 }
 
 .admin-access {
   display:inline-flex;
+
   align-items:center;
+
   justify-content:center;
 
   padding:9px 14px;
 
   border:
     1px solid
-    rgba(11,16,32,.18);
+    rgba(
+      11,
+      16,
+      32,
+      .18
+    );
 
-  border-radius:100px;
+  border-radius:
+    100px;
 
   font-size:13px;
 
   text-decoration:none;
-
-  transition:
-    background .2s ease,
-    color .2s ease;
 }
 
 .admin-access:hover {
@@ -310,24 +499,31 @@ const styles = `
   color:white;
 }
 
-.game-link.has-cover {
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
+.home-page .store-footer {
+  background:#080d1a;
+
+  color:#d7dbea;
+
+  border-top:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      .08
+    );
 }
 
-.store-footer a {
+.home-page .store-footer a {
+  color:#bac1d3;
+
   text-decoration:none;
 }
 
-.store-footer a:hover {
-  color:#5e61e8;
-}
-
 @media(max-width:800px) {
-
   .carousel-track {
-    grid-template-columns:1fr;
+    grid-template-columns:
+      1fr;
   }
 
   .carousel-track
@@ -336,33 +532,44 @@ const styles = `
   }
 
   .carousel-heading {
-    align-items:flex-start;
-    flex-direction:column;
-    gap:22px;
-  }
+    align-items:
+      flex-start;
 
-  .admin-access {
-    font-size:11px;
-    padding:8px 10px;
+    flex-direction:
+      column;
+
+    gap:22px;
   }
 }
 `;
 
 export default function Home() {
-  const [start, setStart] =
-    useState(0);
-
-  const [intro, setIntro] =
-    useState("");
+  const [
+    start,
+    setStart,
+  ] = useState(0);
 
   const [
-    homeCovers,
-    setHomeCovers,
-  ] = useState<CoverMap>({});
+    intro,
+    setIntro,
+  ] = useState("");
 
-  /*
-   * Texto opcional de bienvenida.
-   */
+  const [
+    covers,
+    setCovers,
+  ] =
+    useState<MediaMap>(
+      {}
+    );
+
+  const [
+    logos,
+    setLogos,
+  ] =
+    useState<MediaMap>(
+      {}
+    );
+
   useEffect(() => {
     setIntro(
       localStorage.getItem(
@@ -371,92 +578,138 @@ export default function Home() {
     );
   }, []);
 
-  /*
-   * Cargar portadas de la página
-   * principal desde Supabase.
-   */
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      return;
+    }
 
     const client = supabase;
 
-    const loadCovers = async () => {
-      const {
-        data,
-        error,
-      } = await client
-        .from("home_covers")
-        .select(
-          "tcg,storage_path"
-        );
+    const createMap = (
+      rows:
+        | {
+            tcg: string;
+            storage_path:
+              string;
+          }[]
+        | null
+    ) => {
+      const map:
+        MediaMap = {};
 
-      if (error) {
-        console.error(
-          "Error cargando portadas de inicio:",
-          error
-        );
-
-        return;
-      }
-
-      const next: CoverMap = {};
-
-      for (const cover of data ?? []) {
-        const tcg =
-          cover.tcg as TcgSlug;
-
+      for (
+        const row of
+        rows ?? []
+      ) {
         if (
           ![
             "pokemon",
             "riftbound",
             "yugioh",
-          ].includes(tcg)
+          ].includes(
+            row.tcg
+          )
         ) {
           continue;
         }
 
         const {
-          data: publicData,
-        } = client.storage
-          .from("catalog-images")
-          .getPublicUrl(
-            cover.storage_path
-          );
+          data,
+        } =
+          client.storage
+            .from(
+              "catalog-images"
+            )
+            .getPublicUrl(
+              row.storage_path
+            );
 
-        next[tcg] =
-          publicData.publicUrl;
+        map[
+          row.tcg as TcgSlug
+        ] =
+          data.publicUrl;
       }
 
-      setHomeCovers(next);
+      return map;
     };
 
-    loadCovers();
+    const loadMedia =
+      async () => {
+        const [
+          coverResult,
+          logoResult,
+        ] =
+          await Promise.all([
+            client
+              .from(
+                "home_covers"
+              )
+              .select(
+                "tcg,storage_path"
+              ),
+
+            client
+              .from(
+                "tcg_logos"
+              )
+              .select(
+                "tcg,storage_path"
+              ),
+          ]);
+
+        if (
+          !coverResult.error
+        ) {
+          setCovers(
+            createMap(
+              coverResult.data
+            )
+          );
+        }
+
+        if (
+          !logoResult.error
+        ) {
+          setLogos(
+            createMap(
+              logoResult.data
+            )
+          );
+        }
+      };
+
+    loadMedia();
   }, []);
 
-  /*
-   * Carrusel inferior.
-   */
   useEffect(() => {
     const timer =
-      window.setInterval(() => {
-        setStart(
-          (current) =>
-            (current + 1) %
-            picks.length
-        );
-      }, 4500);
+      window.setInterval(
+        () => {
+          setStart(
+            (current) =>
+              (current +
+                1) %
+              picks.length
+          );
+        },
+        4500
+      );
 
     return () =>
-      window.clearInterval(timer);
+      window.clearInterval(
+        timer
+      );
   }, []);
 
-  const visible = [0, 1, 2].map(
-    (offset) =>
-      picks[
-        (start + offset) %
-          picks.length
-      ]
-  );
+  const visible =
+    [0, 1, 2].map(
+      (offset) =>
+        picks[
+          (start +
+            offset) %
+            picks.length
+        ]
+    );
 
   return (
     <>
@@ -469,7 +722,9 @@ export default function Home() {
             href="/"
           >
             [ ]{" "}
-            <span>TCG STORE</span>
+            <span>
+              TCG STORE
+            </span>
           </Link>
 
           <nav>
@@ -500,7 +755,8 @@ export default function Home() {
               className="bag"
               type="button"
             >
-              Carrito <b>0</b>
+              Carrito{" "}
+              <b>0</b>
             </button>
           </div>
         </header>
@@ -515,50 +771,48 @@ export default function Home() {
             Elige tu
             <br />
 
-            <i>universo.</i>
+            <i>
+              universo.
+            </i>
           </h1>
 
           {intro && (
-            <span>{intro}</span>
+            <span>
+              {intro}
+            </span>
           )}
         </section>
 
         <section className="game-links">
-          {games.map((game) => {
-            const cover =
-              homeCovers[
-                game.slug
-              ];
-
-            return (
+          {games.map(
+            (game) => (
               <Link
-                className={`game-link ${game.tone} ${
-                  cover
-                    ? "has-cover"
-                    : ""
-                }`}
-                href={game.href}
-                key={game.name}
-                style={
-                  cover
-                    ? {
-                        backgroundImage: `
-                          linear-gradient(
-                            180deg,
-                            rgba(5,8,20,.10),
-                            rgba(5,8,20,.72)
-                          ),
-                          url("${cover}")
-                        `,
-                        backgroundSize:
-                          "cover",
-                        backgroundPosition:
-                          "center",
-                      }
-                    : undefined
+                className={`game-link ${game.tone}`}
+                href={
+                  game.href
+                }
+                key={
+                  game.slug
                 }
               >
-                {!cover && (
+                {covers[
+                  game.slug
+                ] && (
+                  <img
+                    className="game-card-cover"
+                    src={
+                      covers[
+                        game
+                          .slug
+                      ]
+                    }
+                    alt=""
+                  />
+                )}
+
+                {!covers[
+                  game.slug
+                ] && (
                   <div className="game-shape">
                     <span />
                     <span />
@@ -568,7 +822,9 @@ export default function Home() {
 
                 <div className="game-link-top">
                   <b>
-                    {game.marker}
+                    {
+                      game.marker
+                    }
                   </b>
 
                   <span>
@@ -577,17 +833,36 @@ export default function Home() {
                 </div>
 
                 <div>
-                  <h2>
-                    {game.name}
-                  </h2>
+                  {logos[
+                    game.slug
+                  ] ? (
+                    <img
+                      className="game-card-logo"
+                      src={
+                        logos[
+                          game
+                            .slug
+                        ]
+                      }
+                      alt={`Logo ${game.name}`}
+                    />
+                  ) : (
+                    <h2>
+                      {
+                        game.name
+                      }
+                    </h2>
+                  )}
 
                   <p>
-                    {game.detail}
+                    {
+                      game.detail
+                    }
                   </p>
                 </div>
               </Link>
-            );
-          })}
+            )
+          )}
         </section>
 
         <section className="home-carousel">
@@ -607,7 +882,6 @@ export default function Home() {
             <div className="carousel-controls">
               <button
                 type="button"
-                aria-label="Producto anterior"
                 onClick={() =>
                   setStart(
                     (
@@ -629,16 +903,21 @@ export default function Home() {
                   2,
                   "0"
                 )}{" "}
-                / 0
-                {picks.length}
+                /{" "}
+                {String(
+                  picks.length
+                ).padStart(
+                  2,
+                  "0"
+                )}
               </span>
 
               <button
                 type="button"
-                aria-label="Producto siguiente"
                 onClick={() =>
                   setStart(
-                    (start + 1) %
+                    (start +
+                      1) %
                       picks.length
                   )
                 }
@@ -650,14 +929,18 @@ export default function Home() {
 
           <div className="carousel-track">
             {visible.map(
-              (pick, index) => (
+              (
+                pick,
+                index
+              ) => (
                 <article
                   className={`pick-card ${pick.color}`}
                   key={`${pick.name}-${index}`}
                 >
                   <div className="pick-art">
                     <span>
-                      Imagen de producto
+                      Imagen de
+                      producto
                     </span>
 
                     <i />
@@ -677,11 +960,9 @@ export default function Home() {
                       {pick.game}
                     </span>
 
-                    <button
-                      type="button"
-                    >
+                    <span>
                       Ver producto ↗
-                    </button>
+                    </span>
                   </footer>
                 </article>
               )
@@ -695,7 +976,9 @@ export default function Home() {
             href="/"
           >
             [ ]{" "}
-            <span>TCG STORE</span>
+            <span>
+              TCG STORE
+            </span>
           </Link>
 
           <p>

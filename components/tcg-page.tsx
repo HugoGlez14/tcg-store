@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import {
   useEffect,
   useState,
@@ -26,105 +27,533 @@ export type StoreConfig = {
   }[];
 };
 
-const tcgStyles = `
-.theme-pokemon .store-hero {
+const styles = `
+.store-page {
+  --accent: #6f6bea;
+  --accent-soft: #9e9aff;
+
+  min-height: 100vh;
+
+  background: #0b1020;
+
+  color: #f6f7fb;
+}
+
+.store-page.theme-pokemon {
+  --accent: #ff4d4d;
+  --accent-soft: #ffbd4a;
+}
+
+.store-page.theme-riftbound {
+  --accent: #735ee8;
+  --accent-soft: #69d8ff;
+}
+
+.store-page.theme-yugioh {
+  --accent: #c64c3e;
+  --accent-soft: #e2b54d;
+}
+
+.store-page .shop-header {
   background:
-    radial-gradient(
-      circle at 82% 25%,
-      #ffd139 0 8%,
-      transparent 9%
-    ),
-    linear-gradient(
-      125deg,
-      #e83632,
-      #ee6244 58%,
-      #f2ba25
-    );
+    rgba(10, 14, 27, .96);
+
+  color: #f6f7fb;
+
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.08);
+
+  backdrop-filter:
+    blur(14px);
 }
 
-.theme-pokemon .product-meta button {
-  background:#e83836;
+.store-page .shop-header a {
+  color: inherit;
 }
 
-.theme-riftbound .store-hero {
-  background:
-    radial-gradient(
-      circle at 80% 26%,
-      #79e3ff 0 5%,
-      transparent 6%
-    ),
-    linear-gradient(
-      125deg,
-      #1f144f,
-      #6242bd 56%,
-      #5bd1ef
-    );
+.store-page .account {
+  color: #f6f7fb;
 }
 
-.theme-riftbound .product-meta button {
-  background:#5c49cf;
-}
+.store-page .admin-access {
+  display: inline-flex;
 
-.theme-yugioh .store-hero {
-  background:
-    radial-gradient(
-      circle at 79% 25%,
-      #e4b849 0 5%,
-      transparent 6%
-    ),
-    linear-gradient(
-      125deg,
-      #15080b,
-      #63202a 56%,
-      #c75135
-    );
-}
+  align-items: center;
+  justify-content: center;
 
-.theme-yugioh .product-meta button {
-  background:#98372d;
-}
-
-.admin-access {
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
-  padding:9px 14px;
+  padding: 9px 14px;
 
   border:
     1px solid
-    rgba(11,16,32,.18);
+    rgba(255,255,255,.18);
 
-  border-radius:100px;
+  border-radius: 100px;
 
-  color:inherit;
+  color: #f6f7fb;
 
-  font-size:13px;
+  font-size: 13px;
 
-  text-decoration:none;
-
-  transition:
-    background .2s ease,
-    color .2s ease;
+  text-decoration: none;
 }
 
-.admin-access:hover {
-  background:#0b1020;
-  color:#fff;
+.store-page .admin-access:hover {
+  background: #f6f7fb;
+  color: #0b1020;
 }
 
-.store-footer a {
-  text-decoration:none;
+.store-page .bag {
+  background: #f6f7fb;
+  color: #0b1020;
 }
 
-.store-footer a:hover {
-  color:#5e61e8;
+.store-page .store-hero {
+  min-height:
+    clamp(
+      540px,
+      65vh,
+      690px
+    );
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(320px,.85fr)
+    minmax(430px,1.15fr);
+
+  align-items: center;
+
+  gap:
+    clamp(
+      35px,
+      6vw,
+      100px
+    );
+
+  padding:
+    clamp(70px,8vw,120px)
+    clamp(25px,6vw,105px);
+
+  background:
+    radial-gradient(
+      circle at 85% 20%,
+      color-mix(
+        in srgb,
+        var(--accent) 28%,
+        transparent
+      ),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 15% 85%,
+      color-mix(
+        in srgb,
+        var(--accent-soft) 13%,
+        transparent
+      ),
+      transparent 32%
+    ),
+    linear-gradient(
+      135deg,
+      #0a0f1f,
+      #10172d
+    );
+
+  position: relative;
+
+  overflow: hidden;
 }
 
-@media(max-width:800px) {
-  .admin-access {
-    padding:8px 10px;
-    font-size:11px;
+.store-page .store-hero::before {
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background-image:
+    linear-gradient(
+      rgba(255,255,255,.025)
+      1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255,255,255,.025)
+      1px,
+      transparent 1px
+    );
+
+  background-size:
+    55px 55px;
+
+  pointer-events: none;
+}
+
+.store-hero-copy {
+  position: relative;
+  z-index: 2;
+}
+
+.store-hero-copy > p:first-child {
+  margin: 0 0 24px;
+
+  color:
+    var(--accent-soft);
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  letter-spacing: .17em;
+
+  text-transform: uppercase;
+}
+
+.store-hero-copy h1 {
+  margin: 0;
+
+  color: #fff;
+
+  font:
+    700 clamp(65px,8vw,130px)/.82
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  letter-spacing:
+    -.07em;
+}
+
+.tcg-hero-logo {
+  display: block;
+
+  width: min(
+    520px,
+    90%
+  );
+
+  max-height: 175px;
+
+  object-fit: contain;
+
+  object-position:
+    left center;
+
+  margin:
+    0 0 30px;
+}
+
+.store-subtitle {
+  max-width: 540px;
+
+  margin:
+    25px 0 30px;
+
+  color: #c5cada;
+
+  font-size: 16px;
+
+  line-height: 1.6;
+}
+
+.store-hero-copy > a {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 25px;
+
+  padding:
+    14px 20px;
+
+  border-radius: 100px;
+
+  background: #fff;
+
+  color: #0b1020;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+.store-hero-copy > a:hover {
+  background:
+    var(--accent-soft);
+}
+
+.store-hero-media {
+  position: relative;
+
+  z-index: 2;
+
+  width: 100%;
+
+  height:
+    clamp(
+      320px,
+      34vw,
+      470px
+    );
+
+  border:
+    1px solid
+    rgba(255,255,255,.12);
+
+  border-radius: 32px;
+
+  background:
+    rgba(4,8,18,.72);
+
+  box-shadow:
+    0 35px 90px
+    rgba(0,0,0,.38);
+
+  padding:
+    clamp(
+      18px,
+      3vw,
+      34px
+    );
+
+  display: grid;
+
+  place-items: center;
+
+  overflow: hidden;
+}
+
+.store-hero-media::before {
+  content: "";
+
+  position: absolute;
+
+  width: 55%;
+
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+
+  background:
+    var(--accent);
+
+  filter:
+    blur(110px);
+
+  opacity: .16;
+}
+
+.store-cover-image {
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  object-position: center;
+
+  display: block;
+}
+
+.store-cover-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    1px dashed
+    rgba(255,255,255,.18);
+
+  border-radius: 22px;
+
+  color:
+    rgba(255,255,255,.45);
+
+  text-transform: uppercase;
+
+  font-size: 10px;
+
+  letter-spacing: .15em;
+}
+
+.store-page .catalog-wrap {
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(111,107,234,.12),
+      transparent 30%
+    ),
+    linear-gradient(
+      180deg,
+      #10162a,
+      #0c1223
+    );
+
+  color: #f5f7ff;
+
+  padding-top:
+    clamp(
+      70px,
+      8vw,
+      120px
+    );
+}
+
+.store-page .catalog-top p {
+  color:
+    var(--accent-soft);
+}
+
+.store-page .catalog-top h2 {
+  color: #fff;
+}
+
+.store-page .filter-button {
+  background:
+    rgba(255,255,255,.07);
+
+  color: #fff;
+
+  border:
+    1px solid
+    rgba(255,255,255,.14);
+}
+
+.store-page .category-nav {
+  border-color:
+    rgba(255,255,255,.1);
+}
+
+.store-page .category-nav a {
+  color: #cfd4e3;
+}
+
+.store-page .category-nav a:hover {
+  color:
+    var(--accent-soft);
+}
+
+.store-page .product-section {
+  border-color:
+    rgba(255,255,255,.09);
+}
+
+.store-page .product-section-title {
+  color: #fff;
+}
+
+.store-page .product-section-title span {
+  color:
+    var(--accent-soft);
+}
+
+.store-page .product-section-title a {
+  color: #bfc5d6;
+}
+
+.store-page .product-card {
+  background: #161d32;
+
+  border:
+    1px solid
+    rgba(255,255,255,.08);
+
+  box-shadow:
+    0 18px 40px
+    rgba(0,0,0,.16);
+}
+
+.store-page .product-image {
+  background:
+    linear-gradient(
+      145deg,
+      #10162a,
+      #1c2541
+    );
+
+  color: #c9cede;
+}
+
+.store-page .product-meta {
+  color: #fff;
+}
+
+.store-page .product-meta p {
+  color:
+    var(--accent-soft);
+}
+
+.store-page .product-meta strong {
+  color: #d9deeb;
+}
+
+.store-page .store-footer {
+  background: #080d1a;
+  color: #d8dce8;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,.08);
+}
+
+.store-page .store-footer a {
+  color: #bfc5d4;
+  text-decoration: none;
+}
+
+.store-page .store-footer a:hover {
+  color:
+    var(--accent-soft);
+}
+
+@media(max-width:1000px) {
+  .store-page .store-hero {
+    grid-template-columns: 1fr;
+
+    min-height: auto;
+
+    padding-top: 80px;
+  }
+
+  .store-hero-media {
+    height:
+      clamp(
+        300px,
+        60vw,
+        450px
+      );
+  }
+}
+
+@media(max-width:600px) {
+  .store-page .store-hero {
+    padding:
+      60px 20px;
+  }
+
+  .store-hero-copy h1 {
+    font-size: 65px;
+  }
+
+  .tcg-hero-logo {
+    max-height: 120px;
+  }
+
+  .store-hero-media {
+    height: 280px;
+
+    border-radius: 22px;
+
+    padding: 14px;
   }
 }
 `;
@@ -149,78 +578,112 @@ export function TcgPage({
     setCover,
   ] = useState("");
 
-  /*
-   * Obtiene la portada interna
-   * del TCG desde Supabase.
-   */
+  const [
+    logo,
+    setLogo,
+  ] = useState("");
+
   useEffect(() => {
     if (!supabase) {
-      setCover("");
       return;
     }
 
     const client = supabase;
 
-    const loadCover =
+    const loadMedia =
       async () => {
-        const {
-          data,
-          error,
-        } = await client
-          .from(
-            "catalog_covers"
-          )
-          .select(
-            "storage_path"
-          )
-          .eq(
-            "tcg",
-            config.slug
-          )
-          .maybeSingle();
+        const [
+          coverResult,
+          logoResult,
+        ] =
+          await Promise.all([
+            client
+              .from(
+                "catalog_covers"
+              )
+              .select(
+                "storage_path"
+              )
+              .eq(
+                "tcg",
+                config.slug
+              )
+              .maybeSingle(),
 
-        if (error) {
-          console.error(
-            "Error cargando portada:",
-            error
+            client
+              .from(
+                "tcg_logos"
+              )
+              .select(
+                "storage_path"
+              )
+              .eq(
+                "tcg",
+                config.slug
+              )
+              .maybeSingle(),
+          ]);
+
+        if (
+          coverResult
+            .data
+            ?.storage_path
+        ) {
+          const {
+            data,
+          } =
+            client.storage
+              .from(
+                "catalog-images"
+              )
+              .getPublicUrl(
+                coverResult
+                  .data
+                  .storage_path
+              );
+
+          setCover(
+            data.publicUrl
           );
-
+        } else {
           setCover("");
-
-          return;
         }
 
         if (
-          !data?.storage_path
+          logoResult
+            .data
+            ?.storage_path
         ) {
-          setCover("");
-          return;
-        }
+          const {
+            data,
+          } =
+            client.storage
+              .from(
+                "catalog-images"
+              )
+              .getPublicUrl(
+                logoResult
+                  .data
+                  .storage_path
+              );
 
-        const {
-          data: publicData,
-        } = client.storage
-          .from(
-            "catalog-images"
-          )
-          .getPublicUrl(
-            data.storage_path
+          setLogo(
+            data.publicUrl
           );
-
-        setCover(
-          publicData.publicUrl
-        );
+        } else {
+          setLogo("");
+        }
       };
 
-    loadCover();
+    loadMedia();
   }, [config.slug]);
 
   const add = (
     product: string
   ) => {
     setCart(
-      (value) =>
-        value + 1
+      (current) =>
+        current + 1
     );
 
     setNotice(
@@ -232,29 +695,9 @@ export function TcgPage({
     }, 2200);
   };
 
-  const heroStyle =
-    cover
-      ? {
-          backgroundImage: `
-            linear-gradient(
-              100deg,
-              rgba(8,10,20,.82),
-              rgba(8,10,20,.25)
-            ),
-            url("${cover}")
-          `,
-          backgroundSize:
-            "cover",
-          backgroundPosition:
-            "center",
-        }
-      : undefined;
-
   return (
     <>
-      <style>
-        {tcgStyles}
-      </style>
+      <style>{styles}</style>
 
       <main
         className={`store-page ${config.accent}`}
@@ -304,30 +747,23 @@ export function TcgPage({
           </div>
         </header>
 
-        <section
-          className="store-hero"
-          style={heroStyle}
-        >
-          {!cover && (
-            <div
-              className="hero-grid"
-              aria-hidden="true"
-            >
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          )}
-
+        <section className="store-hero">
           <div className="store-hero-copy">
             <p>
               Catálogo independiente
             </p>
 
-            <h1>
-              {config.name}
-            </h1>
+            {logo ? (
+              <img
+                className="tcg-hero-logo"
+                src={logo}
+                alt={`Logo ${config.name}`}
+              />
+            ) : (
+              <h1>
+                {config.name}
+              </h1>
+            )}
 
             <p className="store-subtitle">
               {config.subtitle}
@@ -339,16 +775,19 @@ export function TcgPage({
             </a>
           </div>
 
-          <div className="admin-image-note">
-            <strong>
-              Portada de categoría
-            </strong>
-
-            <small>
-              {cover
-                ? "Portada cargada desde administración"
-                : "La cargarás desde administración"}
-            </small>
+          <div className="store-hero-media">
+            {cover ? (
+              <img
+                className="store-cover-image"
+                src={cover}
+                alt={`Portada ${config.name}`}
+              />
+            ) : (
+              <div className="store-cover-placeholder">
+                Portada de{" "}
+                {config.name}
+              </div>
+            )}
           </div>
         </section>
 
@@ -364,7 +803,8 @@ export function TcgPage({
               </p>
 
               <h2>
-                Compra por categoría.
+                Compra por
+                categoría.
               </h2>
             </div>
 
@@ -391,7 +831,9 @@ export function TcgPage({
                     section.title
                   }
                 >
-                  {section.title}
+                  {
+                    section.title
+                  }
                 </a>
               )
             )}
@@ -416,9 +858,13 @@ export function TcgPage({
               >
                 <div className="product-section-title">
                   <span>
-                    0
-                    {sectionIndex +
-                      1}
+                    {String(
+                      sectionIndex +
+                        1
+                    ).padStart(
+                      2,
+                      "0"
+                    )}
                   </span>
 
                   <h3>
@@ -448,7 +894,6 @@ export function TcgPage({
                         <div className="product-image">
                           <div
                             className={`image-loader loader-${config.slug}`}
-                            aria-label={`Cargando espacio de imagen de ${config.name}`}
                           >
                             <i />
                             <i />
@@ -467,9 +912,13 @@ export function TcgPage({
                           </small>
 
                           <b>
-                            0
-                            {index +
-                              1}
+                            {String(
+                              index +
+                                1
+                            ).padStart(
+                              2,
+                              "0"
+                            )}
                           </b>
                         </div>
 
@@ -501,7 +950,6 @@ export function TcgPage({
                                   product
                                 )
                               }
-                              aria-label={`Añadir ${product}`}
                             >
                               +
                             </button>
