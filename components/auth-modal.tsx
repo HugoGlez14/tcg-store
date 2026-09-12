@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -93,9 +94,33 @@ export function AuthModal({
     >("error");
 
   /*
-   * Necesario para usar
-   * document.body sin problemas
-   * con Next.js / SSR.
+   * Guardamos onClose en un ref.
+   *
+   * Así el efecto principal no se
+   * vuelve a ejecutar únicamente
+   * porque el componente padre
+   * creó otra función onClose.
+   */
+  const onCloseRef =
+    useRef(onClose);
+
+  /*
+   * Nos permite detectar cuando
+   * el modal acaba de pasar de
+   * cerrado -> abierto.
+   */
+  const wasOpenRef =
+    useRef(false);
+
+  useEffect(() => {
+    onCloseRef.current =
+      onClose;
+  }, [onClose]);
+
+  /*
+   * Next.js:
+   * createPortal necesita
+   * document.body.
    */
   useEffect(() => {
     setMounted(true);
@@ -106,19 +131,44 @@ export function AuthModal({
   }, []);
 
   /*
-   * Configuración cuando
-   * se abre el modal.
+   * IMPORTANTE:
+   *
+   * Solo restablecemos la pestaña
+   * cuando el modal ACABA DE ABRIR.
+   *
+   * No lo hacemos en cada render.
+   */
+  useEffect(() => {
+    if (
+      open &&
+      !wasOpenRef.current
+    ) {
+      setMode(
+        initialMode
+      );
+
+      setMessage("");
+
+      setLoading(
+        false
+      );
+    }
+
+    wasOpenRef.current =
+      open;
+  }, [
+    open,
+    initialMode,
+  ]);
+
+  /*
+   * Bloquear scroll de la página
+   * y cerrar con ESC.
    */
   useEffect(() => {
     if (!open) {
       return;
     }
-
-    setMode(
-      initialMode
-    );
-
-    setMessage("");
 
     const previousOverflow =
       document.body.style
@@ -135,7 +185,7 @@ export function AuthModal({
         event.key ===
         "Escape"
       ) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -153,12 +203,14 @@ export function AuthModal({
         onKeyDown
       );
     };
-  }, [
-    open,
-    initialMode,
-    onClose,
-  ]);
+  }, [open]);
 
+  /*
+   * Cambiar entre:
+   *
+   * Iniciar sesión
+   * Crear cuenta
+   */
   const switchMode = (
     nextMode:
       AuthMode
@@ -169,13 +221,24 @@ export function AuthModal({
 
     setMessage("");
 
+    /*
+     * Limpiamos únicamente
+     * contraseñas.
+     *
+     * Conservamos correo para que
+     * si el usuario escribió su correo
+     * y cambia de pestaña no tenga
+     * que volverlo a escribir.
+     */
     setPassword("");
 
     setConfirmPassword("");
   };
 
   /*
+   * ==========================
    * INICIAR SESIÓN
+   * ==========================
    */
   const signIn =
     async (
@@ -234,7 +297,7 @@ export function AuthModal({
 
         window.setTimeout(
           () => {
-            onClose();
+            onCloseRef.current();
           },
           450
         );
@@ -244,7 +307,9 @@ export function AuthModal({
     };
 
   /*
+   * ==========================
    * CREAR CUENTA
+   * ==========================
    */
   const signUp =
     async (
@@ -361,13 +426,25 @@ export function AuthModal({
             "Cuenta creada correctamente."
           );
 
+          /*
+           * Si Supabase inicia sesión
+           * automáticamente, cerramos
+           * después de mostrar éxito.
+           */
           window.setTimeout(
             () => {
-              onClose();
+              onCloseRef.current();
             },
             650
           );
         } else {
+          /*
+           * Si requiere confirmación
+           * por correo, NO cambiamos
+           * automáticamente a login.
+           *
+           * El usuario verá el mensaje.
+           */
           setMessage(
             "Cuenta creada. Revisa tu correo para confirmar el registro."
           );
@@ -378,7 +455,9 @@ export function AuthModal({
     };
 
   /*
+   * ==========================
    * GOOGLE
+   * ==========================
    */
   const signInGoogle =
     async () => {
@@ -426,10 +505,6 @@ export function AuthModal({
       }
     };
 
-  /*
-   * No renderizamos hasta
-   * estar del lado del cliente.
-   */
   if (
     !mounted ||
     !open
@@ -437,16 +512,6 @@ export function AuthModal({
     return null;
   }
 
-  /*
-   * IMPORTANTE:
-   *
-   * createPortal manda todo
-   * el modal directamente al
-   * document.body.
-   *
-   * Así deja de depender del
-   * transform del header.
-   */
   return createPortal(
     <div
       className={
@@ -458,8 +523,8 @@ export function AuthModal({
         className={
           styles.backdrop
         }
-        onClick={
-          onClose
+        onClick={() =>
+          onCloseRef.current()
         }
         aria-label="Cerrar ventana"
       />
@@ -477,9 +542,9 @@ export function AuthModal({
             : "Crear cuenta"
         }
       >
-        {/* =========================
-            PARTE IZQUIERDA
-        ========================== */}
+        {/* ======================
+            LADO IZQUIERDO
+        ====================== */}
 
         <aside
           className={
@@ -565,9 +630,9 @@ export function AuthModal({
           </div>
         </aside>
 
-        {/* =========================
-            PARTE DERECHA
-        ========================== */}
+        {/* ======================
+            LADO DERECHO
+        ====================== */}
 
         <div
           className={
@@ -579,8 +644,8 @@ export function AuthModal({
             className={
               styles.close
             }
-            onClick={
-              onClose
+            onClick={() =>
+              onCloseRef.current()
             }
             aria-label="Cerrar"
           >
@@ -601,8 +666,8 @@ export function AuthModal({
             </b>
           </div>
 
-          {/* =====================
-              PESTAÑAS
+          {/* ======================
+              TABS
           ====================== */}
 
           <div
@@ -672,7 +737,7 @@ export function AuthModal({
             </p>
           </header>
 
-          {/* =====================
+          {/* ======================
               LOGIN
           ====================== */}
 
@@ -751,7 +816,7 @@ export function AuthModal({
               </button>
             </form>
           ) : (
-            /* =====================
+            /* ======================
                REGISTRO
             ====================== */
 
@@ -891,7 +956,7 @@ export function AuthModal({
             </form>
           )}
 
-          {/* =====================
+          {/* ======================
               GOOGLE
           ====================== */}
 
@@ -925,7 +990,7 @@ export function AuthModal({
             Continuar con Google
           </button>
 
-          {/* =====================
+          {/* ======================
               MENSAJES
           ====================== */}
 
