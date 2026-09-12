@@ -8,8 +8,12 @@ import {
 } from "react";
 
 import {
-  AuthButton,
-} from "@/components/auth-button";
+  SiteHeader,
+} from "@/components/site-header";
+
+import {
+  SiteFooter,
+} from "@/components/site-footer";
 
 import {
   supabase,
@@ -40,113 +44,367 @@ const games: {
     slug: "pokemon",
     name: "Pokémon",
     href: "/pokemon",
+
     detail:
       "Expansiones, sellado, individuales y accesorios.",
-    marker: "01",
-    tone: "home-pokemon",
+
+    marker:
+      "01",
+
+    tone:
+      "home-pokemon",
   },
+
   {
     slug: "riftbound",
     name: "Riftbound",
     href: "/riftbound",
+
     detail:
       "Lanzamientos, preventas y cartas para tu mazo.",
-    marker: "02",
-    tone: "home-riftbound",
+
+    marker:
+      "02",
+
+    tone:
+      "home-riftbound",
   },
+
   {
     slug: "yugioh",
     name: "Yu-Gi-Oh!",
     href: "/yugioh",
+
     detail:
       "Producto sellado, staples y coleccionables.",
-    marker: "03",
-    tone: "home-yugioh",
+
+    marker:
+      "03",
+
+    tone:
+      "home-yugioh",
   },
 ];
 
 const picks = [
   {
-    name: "Destined Rivals",
-    game: "Pokémon",
-    tag: "Nueva expansión",
-    color: "pick-pokemon",
+    name:
+      "Destined Rivals",
+
+    game:
+      "Pokémon",
+
+    href:
+      "/pokemon",
+
+    tag:
+      "Nueva expansión",
+
+    color:
+      "pick-pokemon",
   },
+
   {
-    name: "Spiritforged",
-    game: "Riftbound",
-    tag: "Preventa",
-    color: "pick-riftbound",
+    name:
+      "Spiritforged",
+
+    game:
+      "Riftbound",
+
+    href:
+      "/riftbound",
+
+    tag:
+      "Preventa",
+
+    color:
+      "pick-riftbound",
   },
+
   {
-    name: "Alliance Insight",
-    game: "Yu-Gi-Oh!",
-    tag: "Producto sellado",
-    color: "pick-yugioh",
+    name:
+      "Alliance Insight",
+
+    game:
+      "Yu-Gi-Oh!",
+
+    href:
+      "/yugioh",
+
+    tag:
+      "Producto sellado",
+
+    color:
+      "pick-yugioh",
   },
+
   {
-    name: "Colecciones premium",
-    game: "Pokémon",
-    tag: "Para coleccionar",
-    color: "pick-pokemon",
+    name:
+      "Colecciones premium",
+
+    game:
+      "Pokémon",
+
+    href:
+      "/pokemon",
+
+    tag:
+      "Para coleccionar",
+
+    color:
+      "pick-pokemon",
   },
 ];
 
 const styles = `
 .home-page {
-  background: #0b1020;
-}
+  min-height: 100vh;
 
-.home-page .shop-header {
   background:
-    rgba(245,246,250,.97);
+    #0b1020;
 }
 
 .home-intro {
+  min-height:
+    455px;
+
+  padding:
+    clamp(
+      70px,
+      8vw,
+      120px
+    )
+    clamp(
+      25px,
+      7vw,
+      118px
+    )
+    65px;
+
   background:
     radial-gradient(
-      circle at 85% 20%,
-      #e5c4ff,
-      transparent 30%
+      circle at 83% 18%,
+      rgba(
+        229,
+        196,
+        255,
+        .95
+      ),
+      transparent 29%
     ),
+
     radial-gradient(
-      circle at 10% 90%,
-      #b8e9ff,
-      transparent 30%
+      circle at 12% 90%,
+      rgba(
+        184,
+        233,
+        255,
+        .9
+      ),
+      transparent 31%
     ),
+
     linear-gradient(
       135deg,
       #eef0ff,
-      #f5ebf4
+      #f7edf5
     );
+
+  color:
+    #0b1020;
 }
 
+.home-intro p {
+  margin:
+    0 0 22px;
+
+  color:
+    #667085;
+
+  font-size:
+    10px;
+
+  font-weight:
+    800;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    .16em;
+}
+
+.home-intro h1 {
+  margin: 0;
+
+  font:
+    700
+    clamp(
+      70px,
+      10vw,
+      150px
+    )
+    /
+    .78
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  letter-spacing:
+    -.08em;
+}
+
+.home-intro i {
+  color:
+    #ff4764;
+
+  font-style:
+    italic;
+
+  text-shadow:
+    0
+    3px
+    0
+    #ffd758;
+}
+
+.home-intro > span {
+  display: block;
+
+  max-width:
+    600px;
+
+  margin-top:
+    34px;
+
+  color:
+    #576075;
+
+  font-size:
+    15px;
+
+  line-height:
+    1.6;
+}
+
+
+/* ========================
+   TCG PRINCIPALES
+======================== */
+
 .game-links {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      1fr
+    );
+
+  gap: 16px;
+
+  padding:
+    clamp(
+      42px,
+      5vw,
+      72px
+    )
+    clamp(
+      20px,
+      4vw,
+      64px
+    )
+    clamp(
+      60px,
+      7vw,
+      95px
+    );
+
   background:
+    radial-gradient(
+      circle at 100% 0,
+      rgba(
+        69,
+        230,
+        214,
+        .18
+      ),
+      transparent 28%
+    ),
+
     linear-gradient(
       180deg,
       #11172c,
       #0c1223
     );
-
-  padding-top:
-    clamp(
-      35px,
-      4vw,
-      65px
-    );
-
-  padding-bottom:
-    clamp(
-      55px,
-      6vw,
-      90px
-    );
 }
 
 .game-link {
+  min-height:
+    410px;
+
+  padding:
+    21px;
+
   position: relative;
+
   overflow: hidden;
+
+  display: flex;
+
+  flex-direction:
+    column;
+
+  justify-content:
+    space-between;
+
+  isolation: isolate;
+
+  border-radius:
+    24px;
+
+  color: #fff;
+
+  box-shadow:
+    0
+    22px
+    55px
+    rgba(
+      0,
+      0,
+      0,
+      .24
+    );
+}
+
+.home-pokemon {
+  background:
+    linear-gradient(
+      135deg,
+      #11b8ed,
+      #3870d9 48%,
+      #f27369
+    );
+}
+
+.home-riftbound {
+  background:
+    linear-gradient(
+      135deg,
+      #1d143e,
+      #6955cc 50%,
+      #b16ae5
+    );
+}
+
+.home-yugioh {
+  background:
+    linear-gradient(
+      135deg,
+      #1a0a0b,
+      #8e2c30 52%,
+      #dc733e
+    );
 }
 
 .game-card-cover {
@@ -154,16 +412,16 @@ const styles = `
 
   inset: 0;
 
+  z-index: -3;
+
   width: 100%;
+
   height: 100%;
 
   object-fit: cover;
 
-  object-position: center;
-
-  z-index: 0;
-
-  opacity: .74;
+  object-position:
+    center;
 }
 
 .game-link::after {
@@ -173,19 +431,101 @@ const styles = `
 
   inset: 0;
 
-  z-index: 1;
+  z-index: -2;
 
   background:
     linear-gradient(
       180deg,
-      rgba(5,8,18,.08),
-      rgba(5,8,18,.88)
+      rgba(
+        5,
+        8,
+        18,
+        .08
+      ),
+
+      rgba(
+        5,
+        8,
+        18,
+        .88
+      )
     );
 }
 
-.game-link > *:not(.game-card-cover) {
-  position: relative;
-  z-index: 2;
+.game-shape {
+  position:
+    absolute;
+
+  right: -16px;
+
+  top: 57px;
+
+  z-index: -1;
+
+  width: 70%;
+
+  aspect-ratio:
+    .7;
+
+  transform:
+    rotate(13deg);
+
+  border:
+    2px solid
+    rgba(
+      255,
+      255,
+      255,
+      .58
+    );
+
+  border-radius:
+    7px;
+}
+
+.game-shape span {
+  display: block;
+
+  height: 1px;
+
+  margin: 20%;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .38
+    );
+}
+
+.game-link-top {
+  display: flex;
+
+  justify-content:
+    space-between;
+
+  gap: 20px;
+
+  font-size:
+    11px;
+
+  font-weight:
+    700;
+}
+
+.game-link-top span {
+  padding-bottom:
+    4px;
+
+  border-bottom:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      .7
+    );
 }
 
 .game-card-logo {
@@ -194,131 +534,222 @@ const styles = `
   width:
     min(
       270px,
-      75%
+      76%
     );
 
-  max-height: 85px;
+  max-height:
+    86px;
 
-  object-fit: contain;
+  margin-bottom:
+    14px;
+
+  object-fit:
+    contain;
 
   object-position:
     left center;
 
-  margin-bottom: 14px;
-
   filter:
     drop-shadow(
-      0 8px 16px
-      rgba(0,0,0,.35)
+      0
+      8px
+      16px
+      rgba(
+        0,
+        0,
+        0,
+        .35
+      )
     );
 }
 
+.game-link h2 {
+  margin:
+    0 0 14px;
+
+  font:
+    400
+    clamp(
+      42px,
+      4vw,
+      65px
+    )
+    /
+    .9
+    Georgia,
+    serif;
+
+  letter-spacing:
+    -.055em;
+}
+
+.game-link p {
+  max-width:
+    290px;
+
+  margin: 0;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.45;
+}
+
+
+/* ========================
+   CARRUSEL
+======================== */
+
 .home-carousel {
   padding:
-    clamp(65px,8vw,115px)
-    clamp(20px,7vw,112px);
+    clamp(
+      65px,
+      8vw,
+      115px
+    )
+    clamp(
+      20px,
+      7vw,
+      112px
+    );
 
   background:
     #11172a;
 
-  color: #f6f7fb;
+  color:
+    #f6f7fb;
 }
 
 .carousel-heading {
-  display:flex;
+  display: flex;
 
-  align-items:end;
+  align-items: end;
+
   justify-content:
     space-between;
 
-  margin-bottom:32px;
+  gap: 25px;
+
+  margin-bottom:
+    32px;
 }
 
 .carousel-heading p {
-  font-size:10px;
+  margin:
+    0 0 16px;
+
+  color:
+    #8f9ab5;
+
+  font-size:
+    10px;
+
+  font-weight:
+    700;
 
   text-transform:
     uppercase;
 
-  letter-spacing:.15em;
-
-  font-weight:700;
-
-  color:#8f9ab5;
-
-  margin:0 0 16px;
+  letter-spacing:
+    .15em;
 }
 
 .carousel-heading h2 {
+  margin: 0;
+
+  color: #fff;
+
   font:
-    400 clamp(
+    400
+    clamp(
       45px,
       5vw,
       76px
-    )/.88
+    )
+    /
+    .88
     Georgia,
     serif;
 
-  letter-spacing:-.06em;
-
-  margin:0;
-
-  color: #fff;
+  letter-spacing:
+    -.06em;
 }
 
 .carousel-controls {
-  display:flex;
+  display: flex;
 
-  align-items:center;
+  align-items:
+    center;
 
-  gap:12px;
+  gap: 12px;
 
-  font-size:12px;
+  font-size:
+    12px;
 }
 
 .carousel-controls button {
-  width:39px;
-  height:39px;
+  width: 39px;
 
-  border-radius:50%;
+  height: 39px;
 
   border:
     1px solid
     #66708c;
+
+  border-radius:
+    50%;
 
   background:
     transparent;
 
   color: #fff;
 
-  font-size:18px;
+  font-size:
+    18px;
+}
+
+.carousel-controls
+button:hover {
+  background:
+    #fff;
+
+  color:
+    #0b1020;
 }
 
 .carousel-track {
-  display:grid;
+  display: grid;
 
   grid-template-columns:
-    repeat(3,1fr);
+    repeat(
+      3,
+      1fr
+    );
 
-  gap:15px;
+  gap: 15px;
 }
 
 .pick-card {
-  color:white;
+  min-height:
+    355px;
 
-  padding:17px;
+  padding:
+    17px;
 
-  min-height:355px;
+  display: flex;
 
-  display:flex;
+  flex-direction:
+    column;
 
-  flex-direction:column;
+  position: relative;
 
-  position:relative;
+  overflow: hidden;
 
-  overflow:hidden;
+  border-radius:
+    18px;
 
-  border-radius: 18px;
+  color: #fff;
 }
 
 .pick-pokemon {
@@ -349,49 +780,75 @@ const styles = `
 }
 
 .pick-art {
-  height:205px;
+  height:
+    205px;
 
   border:
     1px solid
-    rgba(255,255,255,.55);
+    rgba(
+      255,
+      255,
+      255,
+      .55
+    );
 
   background:
-    rgba(255,255,255,.09);
+    rgba(
+      255,
+      255,
+      255,
+      .09
+    );
 
-  position:relative;
+  position:
+    relative;
 
-  display:grid;
+  display:
+    grid;
 
-  place-items:center;
+  place-items:
+    center;
 
-  overflow:hidden;
+  overflow:
+    hidden;
 }
 
 .pick-art span {
-  font-size:11px;
+  position:
+    relative;
+
+  z-index: 2;
+
+  font-size:
+    11px;
 
   text-transform:
     uppercase;
 
-  letter-spacing:.11em;
-
-  position:relative;
-
-  z-index:2;
+  letter-spacing:
+    .11em;
 }
 
 .pick-art i {
-  position:absolute;
+  position:
+    absolute;
 
-  width:42%;
+  width: 42%;
 
-  aspect-ratio:.7;
+  aspect-ratio:
+    .7;
 
   border:
     1px solid
-    rgba(255,255,255,.7);
+    rgba(
+      255,
+      255,
+      255,
+      .7
+    );
 
-  border-radius:5px;
+  border-radius:
+    5px;
 
   transform:
     rotate(16deg)
@@ -409,7 +866,7 @@ const styles = `
     );
 }
 
-.pick-art i+i {
+.pick-art i + i {
   transform:
     rotate(-12deg)
     translate(
@@ -418,34 +875,53 @@ const styles = `
     );
 }
 
-.pick-card>p {
-  font-size:10px;
+.pick-card > p {
+  margin:
+    18px 0 8px;
+
+  font-size:
+    10px;
 
   text-transform:
     uppercase;
 
-  letter-spacing:.12em;
+  letter-spacing:
+    .12em;
 
-  opacity:.78;
-
-  margin:
-    18px 0 8px;
+  opacity: .78;
 }
 
 .pick-card h3 {
+  margin: 0;
+
   font:
-    400 30px/.95
+    400
+    30px
+    /
+    .95
     Georgia,
     serif;
 
   letter-spacing:
     -.045em;
-
-  margin:0;
 }
 
 .pick-card footer {
-  margin-top:auto;
+  margin-top:
+    auto;
+
+  padding-top:
+    13px;
+
+  display: flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  gap: 15px;
 
   border-top:
     1px solid
@@ -456,79 +932,39 @@ const styles = `
       .36
     );
 
-  padding-top:13px;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:
-    space-between;
-
-  font-size:12px;
+  font-size:
+    12px;
 }
 
-.admin-access {
-  display:inline-flex;
+.pick-card footer a {
+  color: #fff;
 
-  align-items:center;
-
-  justify-content:center;
-
-  padding:9px 14px;
-
-  border:
-    1px solid
-    rgba(
-      11,
-      16,
-      32,
-      .18
-    );
-
-  border-radius:
-    100px;
-
-  font-size:13px;
-
-  text-decoration:none;
+  text-decoration:
+    none;
 }
 
-.admin-access:hover {
-  background:#0b1020;
-  color:white;
-}
+@media(
+  max-width:800px
+) {
+  .home-intro {
+    min-height:
+      390px;
+  }
 
-.home-page .store-footer {
-  background:#080d1a;
-
-  color:#d7dbea;
-
-  border-top:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      .08
-    );
-}
-
-.home-page .store-footer a {
-  color:#bac1d3;
-
-  text-decoration:none;
-}
-
-@media(max-width:800px) {
+  .game-links,
   .carousel-track {
     grid-template-columns:
       1fr;
   }
 
+  .game-link {
+    min-height:
+      320px;
+  }
+
   .carousel-track
   .pick-card:nth-child(3) {
-    display:none;
+    display: none;
   }
 
   .carousel-heading {
@@ -537,8 +973,6 @@ const styles = `
 
     flex-direction:
       column;
-
-    gap:22px;
   }
 }
 `;
@@ -572,7 +1006,7 @@ export default function Home() {
 
   useEffect(() => {
     setIntro(
-      localStorage.getItem(
+      window.localStorage.getItem(
         "tcg-home-intro"
       ) || ""
     );
@@ -583,7 +1017,8 @@ export default function Home() {
       return;
     }
 
-    const client = supabase;
+    const client =
+      supabase;
 
     const createMap = (
       rows:
@@ -594,7 +1029,7 @@ export default function Home() {
           }[]
         | null
     ) => {
-      const map:
+      const next:
         MediaMap = {};
 
       for (
@@ -624,13 +1059,13 @@ export default function Home() {
               row.storage_path
             );
 
-        map[
+        next[
           row.tcg as TcgSlug
         ] =
           data.publicUrl;
       }
 
-      return map;
+      return next;
     };
 
     const loadMedia =
@@ -658,8 +1093,13 @@ export default function Home() {
           ]);
 
         if (
-          !coverResult.error
+          coverResult.error
         ) {
+          console.error(
+            "No se pudieron cargar las portadas:",
+            coverResult.error
+          );
+        } else {
           setCovers(
             createMap(
               coverResult.data
@@ -668,8 +1108,13 @@ export default function Home() {
         }
 
         if (
-          !logoResult.error
+          logoResult.error
         ) {
+          console.error(
+            "No se pudieron cargar los logos:",
+            logoResult.error
+          );
+        } else {
           setLogos(
             createMap(
               logoResult.data
@@ -713,57 +1158,19 @@ export default function Home() {
 
   return (
     <>
-      <style>{styles}</style>
+      <style>
+        {styles}
+      </style>
 
       <main className="home-page">
-        <header className="shop-header">
-          <Link
-            className="wordmark"
-            href="/"
-          >
-            [ ]{" "}
-            <span>
-              TCG STORE
-            </span>
-          </Link>
-
-          <nav>
-            <Link href="/pokemon">
-              Pokémon
-            </Link>
-
-            <Link href="/riftbound">
-              Riftbound
-            </Link>
-
-            <Link href="/yugioh">
-              Yu-Gi-Oh!
-            </Link>
-          </nav>
-
-          <div className="header-actions">
-            <AuthButton />
-
-            <Link
-              href="/admin"
-              className="admin-access"
-            >
-              Admin
-            </Link>
-
-            <button
-              className="bag"
-              type="button"
-            >
-              Carrito{" "}
-              <b>0</b>
-            </button>
-          </div>
-        </header>
+        <SiteHeader
+          variant="light"
+        />
 
         <section className="home-intro">
           <p>
-            Cartas coleccionables ·
+            Cartas
+            coleccionables ·
             México
           </p>
 
@@ -813,7 +1220,10 @@ export default function Home() {
                 {!covers[
                   game.slug
                 ] && (
-                  <div className="game-shape">
+                  <div
+                    className="game-shape"
+                    aria-hidden="true"
+                  >
                     <span />
                     <span />
                     <span />
@@ -828,7 +1238,8 @@ export default function Home() {
                   </b>
 
                   <span>
-                    Ir al catálogo ↗
+                    Ir al
+                    catálogo ↗
                   </span>
                 </div>
 
@@ -875,6 +1286,7 @@ export default function Home() {
               <h2>
                 Lo que todos
                 <br />
+
                 quieren abrir.
               </h2>
             </div>
@@ -902,8 +1314,10 @@ export default function Home() {
                 ).padStart(
                   2,
                   "0"
-                )}{" "}
-                /{" "}
+                )}
+
+                {" / "}
+
                 {String(
                   picks.length
                 ).padStart(
@@ -939,8 +1353,8 @@ export default function Home() {
                 >
                   <div className="pick-art">
                     <span>
-                      Imagen de
-                      producto
+                      Producto
+                      destacado
                     </span>
 
                     <i />
@@ -957,12 +1371,19 @@ export default function Home() {
 
                   <footer>
                     <span>
-                      {pick.game}
+                      {
+                        pick.game
+                      }
                     </span>
 
-                    <span>
-                      Ver producto ↗
-                    </span>
+                    <Link
+                      href={
+                        pick.href
+                      }
+                    >
+                      Ver catálogo
+                      ↗
+                    </Link>
                   </footer>
                 </article>
               )
@@ -970,40 +1391,7 @@ export default function Home() {
           </div>
         </section>
 
-        <footer className="store-footer">
-          <Link
-            className="wordmark"
-            href="/"
-          >
-            [ ]{" "}
-            <span>
-              TCG STORE
-            </span>
-          </Link>
-
-          <p>
-            Cartas coleccionables ·
-            México
-          </p>
-
-          <div>
-            <Link href="/politica-de-privacidad">
-              Política de privacidad
-            </Link>
-
-            <Link href="/terminos-y-condiciones">
-              Términos y condiciones
-            </Link>
-
-            <Link href="/politica-de-envios">
-              Política de envíos
-            </Link>
-
-            <Link href="/admin">
-              Administración
-            </Link>
-          </div>
-        </footer>
+        <SiteFooter />
       </main>
     </>
   );
