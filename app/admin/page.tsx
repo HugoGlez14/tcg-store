@@ -23,15 +23,18 @@ import {
   AdminMediaManager,
 } from "@/components/admin-media-manager";
 
-const tabs = [
-  "Resumen",
-  "Productos",
-  "Usuarios",
-  "Imágenes",
-  "Pedidos",
-  "Pagos",
-  "Ajustes",
-];
+/* =========================================
+   TIPOS
+========================================= */
+
+type TabName =
+  | "Resumen"
+  | "Productos"
+  | "Usuarios"
+  | "Imágenes"
+  | "Pedidos"
+  | "Pagos"
+  | "Ajustes";
 
 type UserProfile = {
   id: string;
@@ -52,24 +55,106 @@ type UserProfile = {
     | "admin"
     | "customer";
 
-  created_at:
-    string;
+  created_at: string;
 };
+
+type AdminIdentity = {
+  name: string;
+
+  email: string;
+
+  avatarUrl:
+    | string
+    | null;
+};
+
+/* =========================================
+   NAVEGACIÓN
+========================================= */
+
+const tabs: {
+  name: TabName;
+  icon: string;
+}[] = [
+  {
+    name: "Resumen",
+    icon: "⌂",
+  },
+
+  {
+    name: "Productos",
+    icon: "◇",
+  },
+
+  {
+    name: "Usuarios",
+    icon: "◎",
+  },
+
+  {
+    name: "Imágenes",
+    icon: "▣",
+  },
+
+  {
+    name: "Pedidos",
+    icon: "□",
+  },
+
+  {
+    name: "Pagos",
+    icon: "$",
+  },
+
+  {
+    name: "Ajustes",
+    icon: "⚙",
+  },
+];
+
+const tabDescription: Record<
+  TabName,
+  string
+> = {
+  Resumen:
+    "Vista general de tu tienda y accesos rápidos.",
+
+  Productos:
+    "Administra catálogo, precios, stock y publicación.",
+
+  Usuarios:
+    "Consulta usuarios y asigna permisos de administrador.",
+
+  Imágenes:
+    "Administra logos, portadas de inicio y banners.",
+
+  Pedidos:
+    "Revisa y administra las compras de tus clientes.",
+
+  Pagos:
+    "Configura y revisa tus métodos de cobro.",
+
+  Ajustes:
+    "Personaliza información y configuración de la tienda.",
+};
+
+/* =========================================
+   ADMIN
+========================================= */
 
 export default function AdminPage() {
   const [
     tab,
     setTab,
   ] =
-    useState(
+    useState<TabName>(
       "Resumen"
     );
 
   const [
     saved,
     setSaved,
-  ] =
-    useState("");
+  ] = useState("");
 
   const [
     accessState,
@@ -82,6 +167,24 @@ export default function AdminPage() {
       | "denied"
       | "allowed"
     >("loading");
+
+  const [
+    identity,
+    setIdentity,
+  ] =
+    useState<AdminIdentity>({
+      name:
+        "Administrador",
+
+      email: "",
+
+      avatarUrl:
+        null,
+    });
+
+  /* =======================================
+     VALIDAR SESIÓN + ROL
+  ======================================= */
 
   useEffect(() => {
     if (!supabase) {
@@ -112,6 +215,16 @@ export default function AdminPage() {
             "login"
           );
 
+          setIdentity({
+            name:
+              "Administrador",
+
+            email: "",
+
+            avatarUrl:
+              null,
+          });
+
           return;
         }
 
@@ -127,7 +240,7 @@ export default function AdminPage() {
               "profiles"
             )
             .select(
-              "role"
+              "role,full_name,email,avatar_url"
             )
             .eq(
               "id",
@@ -149,6 +262,37 @@ export default function AdminPage() {
 
           return;
         }
+
+        const metadata =
+          data.user
+            .user_metadata ??
+          {};
+
+        const email =
+          profile?.email ||
+          data.user.email ||
+          "";
+
+        const name =
+          profile?.full_name ||
+          metadata.full_name ||
+          metadata.name ||
+          email.split(
+            "@"
+          )[0] ||
+          "Administrador";
+
+        const avatarUrl =
+          profile?.avatar_url ||
+          metadata.avatar_url ||
+          metadata.picture ||
+          null;
+
+        setIdentity({
+          name,
+          email,
+          avatarUrl,
+        });
 
         setAccessState(
           profile?.role ===
@@ -178,9 +322,12 @@ export default function AdminPage() {
     };
   }, []);
 
+  /* =======================================
+     MENSAJES
+  ======================================= */
+
   const save = (
-    message:
-      string
+    message: string
   ) => {
     setSaved(
       message
@@ -194,6 +341,10 @@ export default function AdminPage() {
     );
   };
 
+  /* =======================================
+     CERRAR SESIÓN
+  ======================================= */
+
   const signOut =
     async () => {
       if (!supabase) {
@@ -206,6 +357,10 @@ export default function AdminPage() {
       window.location.href =
         "/";
     };
+
+  /* =======================================
+     ESTADOS DE ACCESO
+  ======================================= */
 
   if (
     accessState ===
@@ -288,7 +443,7 @@ export default function AdminPage() {
 
           <p>
             Pokeamigos utiliza
-            una sola sesión
+            la misma cuenta
             para clientes y
             administradores.
             Inicia sesión desde
@@ -328,13 +483,10 @@ export default function AdminPage() {
           </h1>
 
           <p>
-            Tu sesión funciona,
-            pero tu perfil tiene
+            La sesión es
+            correcta, pero esta
+            cuenta todavía tiene
             rol de cliente.
-            Solamente una cuenta
-            con rol administrador
-            puede abrir este
-            panel.
           </p>
 
           <Link
@@ -359,177 +511,282 @@ export default function AdminPage() {
     );
   }
 
+  /* =======================================
+     PANEL
+  ======================================= */
+
   return (
     <main className="admin-page">
+      {/* ==================================
+          SIDEBAR
+      ================================== */}
+
       <aside className="admin-sidebar">
-        <Link
-          className="wordmark"
-          href="/"
-        >
-          [ ]{" "}
+        <div>
+          <Link
+            className="admin-brand"
+            href="/"
+          >
+            <span className="admin-brand-mark">
+              [ ]
+            </span>
 
-          <span>
-            POKEAMIGOS
-          </span>
-        </Link>
+            <span>
+              <b>
+                POKEAMIGOS
+              </b>
 
-        <div className="admin-caption">
-          Administración
-        </div>
-
-        <nav>
-          {tabs.map(
-            (item) => (
-              <button
-                type="button"
-                key={
-                  item
-                }
-                className={
-                  tab ===
-                  item
-                    ? "selected"
-                    : ""
-                }
-                onClick={() =>
-                  setTab(
-                    item
-                  )
-                }
-              >
-                {item}
-              </button>
-            )
-          )}
-        </nav>
-
-        <div className="admin-user">
-          <b>
-            Administrador
-          </b>
-
-          <span>
-            Acceso principal
-          </span>
-
-          <Link href="/">
-            ← Ver tienda
+              <small>
+                ADMIN
+              </small>
+            </span>
           </Link>
 
-          <button
-            className="admin-sign-out"
-            type="button"
-            onClick={
-              signOut
-            }
+          <div className="admin-sidebar-label">
+            Administración
+          </div>
+
+          <nav className="admin-nav">
+            {tabs.map(
+              (item) => (
+                <button
+                  type="button"
+                  key={
+                    item.name
+                  }
+                  className={
+                    tab ===
+                    item.name
+                      ? "selected"
+                      : ""
+                  }
+                  onClick={() =>
+                    setTab(
+                      item.name
+                    )
+                  }
+                >
+                  <span className="admin-nav-icon">
+                    {
+                      item.icon
+                    }
+                  </span>
+
+                  <span>
+                    {
+                      item.name
+                    }
+                  </span>
+
+                  <i>
+                    →
+                  </i>
+                </button>
+              )
+            )}
+          </nav>
+        </div>
+
+        <div className="admin-sidebar-bottom">
+          <Link
+            href="/"
+            className="admin-view-store"
           >
-            Cerrar sesión
-          </button>
+            <span>
+              ↗
+            </span>
+
+            Ver tienda
+          </Link>
+
+          <div className="admin-profile">
+            {identity.avatarUrl ? (
+              <span
+                className="admin-profile-avatar"
+                style={{
+                  backgroundImage:
+                    `url("${identity.avatarUrl}")`,
+                }}
+              />
+            ) : (
+              <span className="admin-profile-avatar admin-profile-fallback">
+                {identity.name
+                  .slice(
+                    0,
+                    1
+                  )
+                  .toUpperCase()}
+              </span>
+            )}
+
+            <div>
+              <b>
+                {
+                  identity.name
+                }
+              </b>
+
+              <small>
+                {identity.email ||
+                  "Administrador"}
+              </small>
+            </div>
+
+            <button
+              type="button"
+              title="Cerrar sesión"
+              aria-label="Cerrar sesión"
+              onClick={
+                signOut
+              }
+            >
+              ↪
+            </button>
+          </div>
         </div>
       </aside>
+
+      {/* ==================================
+          CONTENIDO
+      ================================== */}
 
       <section className="admin-main">
         <header className="admin-top">
           <div>
-            <p>
-              Panel de control
-            </p>
+            <span className="admin-eyebrow">
+              PANEL DE CONTROL
+            </span>
 
             <h1>
               {tab}
             </h1>
+
+            <p>
+              {
+                tabDescription[
+                  tab
+                ]
+              }
+            </p>
           </div>
 
-          <button
-            className="publish"
-            type="button"
-            onClick={() =>
-              save(
-                "Cambios guardados"
-              )
-            }
-          >
-            Guardar cambios
-          </button>
+          <div className="admin-top-actions">
+            <Link
+              href="/"
+              className="admin-preview-button"
+            >
+              Vista previa
+              ↗
+            </Link>
+
+            <button
+              className="publish"
+              type="button"
+              onClick={() =>
+                save(
+                  "Cambios guardados"
+                )
+              }
+            >
+              <span>
+                ✓
+              </span>
+
+              Guardar cambios
+            </button>
+          </div>
         </header>
 
-        {tab ===
-          "Resumen" && (
-          <Overview
-            setTab={
-              setTab
-            }
-          />
-        )}
+        <div className="admin-content">
+          {tab ===
+            "Resumen" && (
+            <Overview
+              setTab={
+                setTab
+              }
+            />
+          )}
 
-        {tab ===
-          "Productos" && (
-          <ProductManager />
-        )}
+          {tab ===
+            "Productos" && (
+            <ProductManager />
+          )}
 
-        {tab ===
-          "Usuarios" && (
-          <Users
-            save={
-              save
-            }
-          />
-        )}
+          {tab ===
+            "Usuarios" && (
+            <Users
+              save={
+                save
+              }
+            />
+          )}
 
-        {tab ===
-          "Imágenes" && (
-          <AdminMediaManager
-            save={
-              save
-            }
-          />
-        )}
+          {tab ===
+            "Imágenes" && (
+            <AdminMediaManager
+              save={
+                save
+              }
+            />
+          )}
 
-        {tab ===
-          "Pedidos" && (
-          <Orders />
-        )}
+          {tab ===
+            "Pedidos" && (
+            <Orders />
+          )}
 
-        {tab ===
-          "Pagos" && (
-          <Payments
-            save={
-              save
-            }
-          />
-        )}
+          {tab ===
+            "Pagos" && (
+            <Payments
+              save={
+                save
+              }
+            />
+          )}
 
-        {tab ===
-          "Ajustes" && (
-          <Settings
-            save={
-              save
-            }
-          />
-        )}
+          {tab ===
+            "Ajustes" && (
+            <Settings
+              save={
+                save
+              }
+            />
+          )}
+        </div>
       </section>
 
       {saved && (
         <output className="admin-toast">
-          ✓ {saved}
+          <span>
+            ✓
+          </span>
+
+          {saved}
         </output>
       )}
     </main>
   );
 }
 
+/* =========================================
+   RESUMEN
+========================================= */
+
 function Overview({
   setTab,
 }: {
   setTab: (
-    value:
-      string
+    value: TabName
   ) => void;
 }) {
   return (
     <>
       <section className="metrics">
-        <article>
+        <article className="metric-primary">
+          <div className="metric-icon">
+            $
+          </div>
+
           <small>
             Ventas del mes
           </small>
@@ -545,8 +802,13 @@ function Overview({
         </article>
 
         <article>
+          <div className="metric-icon">
+            □
+          </div>
+
           <small>
-            Pedidos pendientes
+            Pedidos
+            pendientes
           </small>
 
           <strong>
@@ -554,13 +816,19 @@ function Overview({
           </strong>
 
           <span>
-            Requieren revisión
+            Requieren
+            revisión
           </span>
         </article>
 
         <article>
+          <div className="metric-icon">
+            ◇
+          </div>
+
           <small>
-            Productos publicados
+            Productos
+            publicados
           </small>
 
           <strong>
@@ -568,24 +836,29 @@ function Overview({
           </strong>
 
           <span>
-            3 catálogos activos
+            3 catálogos
+            activos
           </span>
         </article>
       </section>
 
       <section className="admin-grid">
-        <article className="admin-card wide">
+        <article className="admin-card wide admin-quick-card">
           <div className="card-heading">
             <div>
               <p>
-                Acceso rápido
+                Acciones rápidas
               </p>
 
               <h2>
-                Prepara tu tienda
-                para vender.
+                ¿Qué quieres
+                administrar?
               </h2>
             </div>
+
+            <span className="card-badge">
+              POKEAMIGOS
+            </span>
           </div>
 
           <div className="quick-actions">
@@ -597,7 +870,25 @@ function Overview({
                 )
               }
             >
-              ＋ Añadir producto
+              <span className="quick-icon">
+                ＋
+              </span>
+
+              <div>
+                <b>
+                  Añadir
+                  producto
+                </b>
+
+                <small>
+                  Catálogo,
+                  precio y stock
+                </small>
+              </div>
+
+              <i>
+                →
+              </i>
             </button>
 
             <button
@@ -608,28 +899,72 @@ function Overview({
                 )
               }
             >
-              ▣ Cambiar
-              portadas y logos
+              <span className="quick-icon">
+                ▣
+              </span>
+
+              <div>
+                <b>
+                  Multimedia
+                </b>
+
+                <small>
+                  Portadas y
+                  logos
+                </small>
+              </div>
+
+              <i>
+                →
+              </i>
             </button>
 
             <button
               type="button"
               onClick={() =>
                 setTab(
-                  "Ajustes"
+                  "Usuarios"
                 )
               }
             >
-              ⚙ Ajustes de tienda
+              <span className="quick-icon">
+                ◎
+              </span>
+
+              <div>
+                <b>
+                  Usuarios
+                </b>
+
+                <small>
+                  Clientes y
+                  administradores
+                </small>
+              </div>
+
+              <i>
+                →
+              </i>
             </button>
           </div>
         </article>
 
-        <article className="admin-card">
-          <p>
-            Estado de
-            lanzamiento
-          </p>
+        <article className="admin-card launch-card">
+          <div className="card-heading">
+            <div>
+              <p>
+                Estado
+              </p>
+
+              <h2>
+                Lanzamiento
+              </h2>
+            </div>
+
+            <strong className="launch-percentage">
+              50%
+            </strong>
+          </div>
 
           <div className="launch-progress">
             <i />
@@ -640,7 +975,8 @@ function Overview({
 
           <ol>
             <li className="done">
-              Catálogos creados
+              Catálogos
+              creados
             </li>
 
             <li className="done">
@@ -653,21 +989,54 @@ function Overview({
             </li>
 
             <li>
-              Publicar inventario
+              Publicar
+              inventario
             </li>
           </ol>
         </article>
+      </section>
+
+      <section className="admin-card admin-welcome-card">
+        <div>
+          <span>
+            TIENDA
+          </span>
+
+          <h2>
+            Pokeamigos está
+            tomando forma.
+          </h2>
+
+          <p>
+            Administra la
+            identidad visual,
+            catálogo, clientes y
+            configuración desde
+            un solo lugar.
+          </p>
+        </div>
+
+        <Link href="/">
+          Abrir tienda
+
+          <span>
+            ↗
+          </span>
+        </Link>
       </section>
     </>
   );
 }
 
+/* =========================================
+   USUARIOS
+========================================= */
+
 function Users({
   save,
 }: {
   save: (
-    value:
-      string
+    value: string
   ) => void;
 }) {
   const [
@@ -682,15 +1051,12 @@ function Users({
     loading,
     setLoading,
   ] =
-    useState(
-      true
-    );
+    useState(true);
 
   const [
     error,
     setError,
-  ] =
-    useState("");
+  ] = useState("");
 
   const [
     changingRole,
@@ -749,19 +1115,14 @@ function Users({
             queryError.message
           );
 
-          setUsers(
-            []
-          );
+          setUsers([]);
         } else {
           setUsers(
             (data ??
-              []) as
-              UserProfile[]
+              []) as UserProfile[]
           );
 
-          setError(
-            ""
-          );
+          setError("");
         }
 
         setLoading(
@@ -774,8 +1135,7 @@ function Users({
 
   const updateRole =
     async (
-      userId:
-        string,
+      userId: string,
 
       role:
         | "admin"
@@ -851,47 +1211,77 @@ function Users({
       <div className="card-heading">
         <div>
           <p>
-            Clientes registrados
+            Comunidad
           </p>
 
           <h2>
             Usuarios
+            registrados
           </h2>
         </div>
 
-        <b className="users-count">
-          {users.length}
-        </b>
+        <div className="users-count">
+          <span>
+            Total
+          </span>
+
+          <b>
+            {users.length}
+          </b>
+        </div>
       </div>
 
       {loading && (
-        <p className="users-message">
-          Cargando usuarios…
-        </p>
+        <div className="admin-empty-state">
+          <span className="admin-mini-loader" />
+
+          <p>
+            Cargando
+            usuarios…
+          </p>
+        </div>
       )}
 
       {!loading &&
         error && (
-          <p className="users-error">
-            {error}
-          </p>
+          <div className="admin-error-state">
+            <b>
+              No pudimos cargar
+              los usuarios.
+            </b>
+
+            <span>
+              {error}
+            </span>
+          </div>
         )}
 
       {!loading &&
         !error &&
         users.length ===
           0 && (
-          <p className="users-message">
-            Todavía no hay
-            usuarios registrados.
-          </p>
+          <div className="admin-empty-state">
+            <span>
+              ◎
+            </span>
+
+            <b>
+              Aún no hay
+              usuarios.
+            </b>
+
+            <p>
+              Las cuentas nuevas
+              aparecerán aquí.
+            </p>
+          </div>
         )}
 
       {!loading &&
         !error &&
         users.length >
           0 && (
-          <div className="users-list">
+          <div className="users-table-wrap">
             <div className="user-row user-row-head">
               <span>
                 Usuario
@@ -957,7 +1347,7 @@ function Users({
                       </b>
                     </div>
 
-                    <span>
+                    <span className="user-email">
                       {user.email ||
                         "Sin correo"}
                     </span>
@@ -999,7 +1389,7 @@ function Users({
                       </option>
                     </select>
 
-                    <span>
+                    <span className="user-date">
                       {new Date(
                         user.created_at
                       ).toLocaleDateString(
@@ -1016,12 +1406,118 @@ function Users({
   );
 }
 
+/* =========================================
+   PEDIDOS
+========================================= */
+
+function Orders() {
+  return (
+    <section className="admin-card orders">
+      <div className="card-heading">
+        <div>
+          <p>
+            Operación
+          </p>
+
+          <h2>
+            Pedidos
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          className="admin-outline-button"
+        >
+          Exportar
+
+          <span>
+            ↓
+          </span>
+        </button>
+      </div>
+
+      <div className="orders-table">
+        <div className="order-row header">
+          <span>
+            Pedido
+          </span>
+
+          <span>
+            Cliente
+          </span>
+
+          <span>
+            Total
+          </span>
+
+          <span>
+            Estado
+          </span>
+        </div>
+
+        {[
+          "#0003",
+          "#0002",
+          "#0001",
+        ].map(
+          (
+            order,
+            index
+          ) => (
+            <div
+              className="order-row"
+              key={
+                order
+              }
+            >
+              <b>
+                {order}
+              </b>
+
+              <span>
+                {index ===
+                0
+                  ? "Pago por validar"
+                  : "Cliente de prueba"}
+              </span>
+
+              <strong>
+                {index ===
+                0
+                  ? "—"
+                  : "$0.00"}
+              </strong>
+
+              <em
+                className={
+                  index ===
+                  0
+                    ? "order-pending"
+                    : "order-draft"
+                }
+              >
+                {index ===
+                0
+                  ? "Pendiente"
+                  : "Borrador"}
+              </em>
+            </div>
+          )
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* =========================================
+   PAGOS
+========================================= */
+
 function Payments({
   save,
 }: {
   save: (
-    value:
-      string
+    value: string
   ) => void;
 }) {
   const methods = [
@@ -1065,8 +1561,9 @@ function Payments({
 
           <span>
             Conecta solamente
-            los métodos que usarás
-            en tu tienda.
+            los métodos que
+            utilizarás en
+            Pokeamigos.
           </span>
         </div>
 
@@ -1126,7 +1623,7 @@ function Payments({
                   )
                 }
               >
-                Configurar{" "}
+                Configurar
 
                 <span>
                   →
@@ -1143,101 +1640,54 @@ function Payments({
           )
         )}
       </div>
-    </section>
-  );
-}
 
-function Orders() {
-  return (
-    <section className="admin-card orders">
-      <div className="card-heading">
+      <section className="payment-checklist">
         <div>
           <p>
-            Pedidos
+            Antes de cobrar
           </p>
 
-          <h2>
-            Revisión de pedidos
-          </h2>
+          <h3>
+            Checklist de
+            lanzamiento
+          </h3>
         </div>
 
-        <button
-          type="button"
-        >
-          Exportar
-        </button>
-      </div>
+        <ul>
+          <li>
+            Cuenta de negocio
+            verificada.
+          </li>
 
-      <div className="order-row header">
-        <span>
-          Pedido
-        </span>
+          <li>
+            Políticas de la
+            tienda publicadas.
+          </li>
 
-        <span>
-          Cliente
-        </span>
+          <li>
+            Cuenta bancaria
+            configurada.
+          </li>
 
-        <span>
-          Total
-        </span>
-
-        <span>
-          Estado
-        </span>
-      </div>
-
-      {[
-        "#0003",
-        "#0002",
-        "#0001",
-      ].map(
-        (
-          order,
-          index
-        ) => (
-          <div
-            className="order-row"
-            key={
-              order
-            }
-          >
-            <b>
-              {order}
-            </b>
-
-            <span>
-              {index ===
-              0
-                ? "Pago por validar"
-                : "Cliente de prueba"}
-            </span>
-
-            <strong>
-              {index ===
-              0
-                ? "—"
-                : "$0.00"}
-            </strong>
-
-            <em>
-              {index ===
-              0
-                ? "Pendiente"
-                : "Borrador"}
-            </em>
-          </div>
-        )
-      )}
+          <li>
+            Compra de prueba
+            completada.
+          </li>
+        </ul>
+      </section>
     </section>
   );
 }
+
+/* =========================================
+   AJUSTES
+========================================= */
 
 function Settings({
   save,
 }: {
   save: (
-    value:
-      string
+    value: string
   ) => void;
 }) {
   const [
@@ -1269,14 +1719,24 @@ function Settings({
   return (
     <section className="settings">
       <article className="admin-card">
+        <div className="settings-card-icon">
+          ◇
+        </div>
+
         <p>
-          Datos de la tienda
+          Datos de tienda
         </p>
+
+        <h3>
+          Información
+          principal
+        </h3>
 
         <label>
           Nombre visible
 
           <input
+            defaultValue="Pokeamigos"
             placeholder="Pokeamigos"
           />
         </label>
@@ -1304,14 +1764,23 @@ function Settings({
       </article>
 
       <article className="admin-card">
+        <div className="settings-card-icon">
+          ✦
+        </div>
+
         <p>
           Página principal
         </p>
 
-        <label>
-          Mensaje de bienvenida
+        <h3>
+          Mensaje de
+          bienvenida
+        </h3>
 
-          <input
+        <label>
+          Texto
+
+          <textarea
             value={
               homeIntro
             }
@@ -1319,7 +1788,8 @@ function Settings({
               event
             ) =>
               setHomeIntro(
-                event.target
+                event
+                  .target
                   .value
               )
             }
@@ -1329,6 +1799,13 @@ function Settings({
             placeholder="Cartas, comunidad y grandes hallazgos."
           />
         </label>
+
+        <div className="settings-counter">
+          {
+            homeIntro.length
+          }
+          /120
+        </div>
 
         <button
           className="primary-action"
@@ -1341,23 +1818,52 @@ function Settings({
         </button>
       </article>
 
-      <article className="admin-card">
+      <article className="admin-card settings-legal-card">
+        <div className="settings-card-icon">
+          §
+        </div>
+
         <p>
-          Envíos y políticas
+          Legal
         </p>
 
+        <h3>
+          Envíos y
+          políticas
+        </h3>
+
         <span>
-          Revisa la información
-          legal visible para tus
+          Revisa la
+          información legal
+          visible para tus
           clientes.
         </span>
 
-        <Link
-          className="secondary"
-          href="/politica-de-envios"
-        >
-          Política de envíos
-        </Link>
+        <div className="settings-links">
+          <Link href="/politica-de-privacidad">
+            Privacidad
+
+            <b>
+              ↗
+            </b>
+          </Link>
+
+          <Link href="/terminos-y-condiciones">
+            Términos
+
+            <b>
+              ↗
+            </b>
+          </Link>
+
+          <Link href="/politica-de-envios">
+            Envíos
+
+            <b>
+              ↗
+            </b>
+          </Link>
+        </div>
       </article>
     </section>
   );
